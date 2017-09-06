@@ -8,7 +8,6 @@ use JSON qw(from_json to_json);
 use Getopt::Long;
 use Config::Simple;
 use File::HomeDir;
-use Data::Dumper;
 
 our $opt;
 
