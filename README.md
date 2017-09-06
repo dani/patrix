@@ -25,6 +25,8 @@ For now it's very limited, and can only send messages to a room. Here's the vail
 
 All the available options can be set a the configuration file using a simple ini style format, eg
 
+```
 user=alert
 password=p@ssw0rd
 room=!BWdARvAgNQGgSjgtAG:matrix.domain.com
+```
