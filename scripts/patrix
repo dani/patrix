@@ -48,6 +48,10 @@ if (!-t STDIN){
 $opt->{server} //= 'matrix.org';
 $opt->{action} //= 'send-msg';
 
+# Should we logout at the end ? Only if we used login and pass
+# If we used an access_token, we don't want it to be invalidated
+my $must_logout = ($opt->{access_token}) ? 0 : 1;
+
 # Check we have all the options we need
 if ($opt->{action} eq 'get-access-token' && (!$opt->{user} || !$opt->{password})){
   die "You need to provide a valid user and password to get an access token\n\n";
@@ -194,8 +198,9 @@ elsif ($opt->{action} eq 'send-msg'){
     login();
     join_room();
     send_msg();
-    logout();
   }
 }
+
+logout() if $must_logout;
 
 exit(0);
