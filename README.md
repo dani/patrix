@@ -22,6 +22,7 @@ For now it's very limited, and can only send messages to a room. Here's the vail
   * --action: what to do. Valid actions are
     * send-msg (default): send the text message
     * get-access-token: just login and print the access token
+    * get-room-list: prints the list of public rooms of this server
 
 All the available options can be set a the configuration file using a simple ini style format, eg
 
