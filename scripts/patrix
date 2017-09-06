@@ -154,9 +154,36 @@ sub send_msg(){
   my $resp = $lwp->request( $req );
 }
 
+sub list_room(){
+  my $uri = $opt->{server} . '/_matrix/client/r0/publicRooms?access_token=' . $opt->{access_token};
+  my $req = HTTP::Request->new( 'POST', $uri );
+  my $json = {};
+  $req->header( 'Content-Type' => 'application/json' );
+  $req->content( to_json($json) );
+  my $resp = $lwp->request( $req );
+  unless ( $resp->is_success ){
+    die "Error joining room $opt->{room}\n";
+  }
+  if ($opt->{debug}){
+    print "List rooms response is\n" .
+          to_json(from_json($resp->decoded_content), { pretty => 1 }) .
+          "\n\n";
+  }
+  print "Existing Rooms:\n";
+  foreach (@{from_json($resp->decoded_content)->{chunk}}){
+    print "  * " . $_->{room_id};
+    print ' (' . $_->{canonical_alias} . ')' if (defined $_->{canonical_alias});
+    print "\n";
+  }
+}
+
 if ($opt->{action} eq 'get-access-token'){
   login();
   print $opt->{access_token} . "\n";
+}
+elsif ($opt->{action} eq 'get-room-list'){
+  login();
+  list_room();
 }
 elsif ($opt->{action} eq 'send-msg'){
   if (defined $opt->{access_token}){
