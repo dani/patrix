@@ -30,3 +30,5 @@ user=alert
 password=p@ssw0rd
 room=!BWdARvAgNQGgSjgtAG:matrix.domain.com
 ```
+
+Options given on the command line take precedence over the config file
