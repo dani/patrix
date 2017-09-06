@@ -1,0 +1,175 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+use LWP::UserAgent;
+use HTTP::Request;
+use JSON qw(from_json to_json);
+use Getopt::Long;
+use Config::Simple;
+use File::HomeDir;
+use Data::Dumper;
+
+our $opt;
+
+GetOptions(
+  "user=s"           => \$opt->{user},
+  "password=s"       => \$opt->{password},
+  "access_token=s"   => \$opt->{access_token},
+  "server=s"         => \$opt->{server},
+  "room=s"           => \$opt->{room},
+  "message=s"        => \$opt->{message},
+  "notice"           => \$opt->{notice},
+  "debug"            => \$opt->{debug},
+  "action=s"         => \$opt->{action},
+  "conf=s"           => \$opt->{conf}
+);
+
+if (-e File::HomeDir->my_home . "/.patrixrc" && !$opt->{conf}){
+  $opt->{conf} = File::HomeDir->my_home . "/.patrixrc";
+  if ($opt->{debug}){
+    print "Using default config file $opt->{conf}\n\n";
+  }
+}
+if ($opt->{conf} && -e $opt->{conf}){
+  read_conf();
+}
+
+if (!-t STDIN){
+  $opt->{message} = '';
+  if ($opt->{debug}){
+    print "Reading message from stdin. --message will be ignored\n\n";
+  }
+  while (<STDIN>){
+    $opt->{message} .= $_;
+  }
+}
+
+# Set defaults
+$opt->{server} //= 'matrix.org';
+$opt->{action} //= 'send-msg';
+
+# Check we have all the options we need
+if ($opt->{action} eq 'get-access-token' && (!$opt->{user} || !$opt->{password})){
+  die "You need to provide a valid user and password to get an access token\n\n";
+}
+elsif (!$opt->{access_token} && (!$opt->{user} || !$opt->{password})){
+  die "You need to provide either an access token or a valid user and password\n\n";
+}
+if ($opt->{action} eq 'send-msg' && (!$opt->{room} || !$opt->{message})){
+  die "You need to provide a room ID and a message";
+}
+
+$opt->{server} = 'https://' . $opt->{server} unless ($opt->{server} =~ m|https?://|);
+
+my $lwp = LWP::UserAgent->new;
+
+sub read_conf {
+  my $cfg = Config::Simple->new;
+  $cfg->read($opt->{conf});
+  foreach my $param(keys %{$opt}){
+    if ($cfg->param('default.' . $param) && !$opt->{$param}){
+      $opt->{$param} = $cfg->param('default.' . $param)
+    }
+  }
+}
+
+sub login{
+  if ( $opt->{debug} ){
+    print "Trying to login on $opt->{server} as $opt->{user}\n";
+  }
+  my $uri = $opt->{server} . '/_matrix/client/r0/login';
+  my $req = HTTP::Request->new( 'POST', $uri );
+  my $json = {
+    type     => 'm.login.password',
+    user     => $opt->{user},
+    password => $opt->{password}
+  };
+  $req->header( 'Content-Type' => 'application/json' );
+  $req->content( to_json($json) );
+  my $resp = $lwp->request( $req );
+  if ( $opt->{debug} ){
+    print "Login response is\n" .
+          to_json(from_json($resp->decoded_content), { pretty => 1 }) .
+          "\n\n";
+  }
+  unless ( $resp->is_success ){
+    die "Error login in, please check your credentials\n";
+  }
+  # Set the access token
+  $opt->{access_token} = from_json($resp->decoded_content)->{access_token};
+}
+
+sub logout(){
+  if ( $opt->{debug} ){
+    print "Trying to logout\n";
+  }
+  my $uri = $opt->{server} . '/_matrix/client/r0/logout?access_token=' . $opt->{access_token};
+  my $req = HTTP::Request->new( 'POST', $uri );
+  my $json = {};
+  $req->header( 'Content-Type' => 'application/json' );
+  $req->content( to_json($json) );
+  my $resp = $lwp->request( $req );
+  if ($opt->{debug}){
+    print "Logout response is\n" .
+          to_json(from_json($resp->decoded_content), { pretty => 1 }) .
+          "\n\n";
+  }
+  unless ( $resp->is_success ){
+    die "Error login out\n";
+  }
+}
+
+sub join_room(){
+  if ($opt->{debug}){
+    print "Trying to join room $opt->{room}\n";
+  }
+  my $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/join?access_token=' . $opt->{access_token};
+  my $req = HTTP::Request->new( 'POST', $uri );
+  my $json = {};
+  $req->header( 'Content-Type' => 'application/json' );
+  $req->content( to_json($json) );
+  my $resp = $lwp->request( $req );
+  if ($opt->{debug}){
+    print "Joining room response is\n" .
+          to_json(from_json($resp->decoded_content), { pretty => 1 }) .
+          "\n\n";
+  }
+  unless ( $resp->is_success ){
+    die "Error joining room $opt->{room}\n";
+  }
+  # Resolve room -> room_id if joined by alias
+  my $room_id = from_json($resp->decoded_content)->{room_id};
+  $opt->{roomt} = $room_id if $room_id;
+}
+
+sub send_msg(){
+  my $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/send/m.room.message?access_token=' . $opt->{access_token};
+  my $req = HTTP::Request->new( 'POST', $uri );
+  my $json = {
+    msgtype => ($opt->{notice}) ? 'm.notice' : 'm.text',
+    body => $opt->{message}
+  };
+  $req->header( 'Content-Type' => 'application/json' );
+  $req->content( to_json($json) );
+  my $resp = $lwp->request( $req );
+}
+
+if ($opt->{action} eq 'get-access-token'){
+  login();
+  print $opt->{access_token} . "\n";
+}
+elsif ($opt->{action} eq 'send-msg'){
+  if (defined $opt->{access_token}){
+    join_room();
+    send_msg();
+  }
+  else{
+    login();
+    join_room();
+    send_msg();
+    logout();
+  }
+}
+
+exit(0);
