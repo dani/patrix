@@ -40,3 +40,15 @@ room=!BWdARvAgNQGgSjgtAG:matrix.domain.com
 ```
 
 Options given on the command line take precedence over the config file
+
+Examples:
+
+```
+cat /var/log/boot.log | patrix --room='#bootlogs:matrix.domain.com' --action=send-notice
+```
+```
+patrix --action=send-file --file=/home/dani/archive.tgz --user=dani --password=secret --server=matrix.domain.com
+```
+```
+patrix --debug --message="Hello World"
+```
