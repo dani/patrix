@@ -15,6 +15,9 @@ Requires: perl(HTTP::Request)
 Requires: perl(File::HomeDir)
 Requires: perl(Getopt::Long)
 Requires: perl(JSON)
+Requires: perl(File::basename)
+Requires: perl(File::MimeInfo)
+Requires: perl(Path::Tiny)
 
 %description
 Patrix is a simple (and quite limited) client for the Matrix communication network
