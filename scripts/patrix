@@ -280,9 +280,9 @@ sub create_room {
   my $uri = $opt->{server} . '/_matrix/client/r0/createRoom?access_token=' . $opt->{access_token};
   my $req = HTTP::Request->new( 'POST', $uri );
   my $json = {};
-  $json->{room_alias_name} = $opt->{alias}     if $opt->{alias};
-  $json->{topic}           = $opt->{topic}     if $opt->{topic};
-  $json->{name}            = $opt->{name}      if $opt->{name};
+  $json->{room_alias_name} = $opt->{alias}  if $opt->{alias};
+  $json->{topic}           = $opt->{topic}  if $opt->{topic};
+  $json->{name}            = $opt->{name}   if $opt->{name};
   $json->{invite}          = $opt->{invite} if $opt->{invite};
   $req->header( 'Content-Type' => 'application/json' );
   $req->content( to_json($json) );
