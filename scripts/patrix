@@ -30,6 +30,8 @@ GetOptions(
   "name=s"           => \$opt->{name},
   "alias=s"          => \$opt->{alias},
   "topic=s"          => \$opt->{topic},
+  "preset=s"         => \$opt->{preset},
+  "visibility=s"     => \$opt->{visibility}
 );
 
 if (-e File::HomeDir->my_home . "/.patrixrc" && !$opt->{conf}){
@@ -280,10 +282,12 @@ sub create_room {
   my $uri = $opt->{server} . '/_matrix/client/r0/createRoom?access_token=' . $opt->{access_token};
   my $req = HTTP::Request->new( 'POST', $uri );
   my $json = {};
-  $json->{room_alias_name} = $opt->{alias}  if $opt->{alias};
-  $json->{topic}           = $opt->{topic}  if $opt->{topic};
-  $json->{name}            = $opt->{name}   if $opt->{name};
-  $json->{invite}          = $opt->{invite} if $opt->{invite};
+  $json->{room_alias_name} = $opt->{alias}      if $opt->{alias};
+  $json->{topic}           = $opt->{topic}      if $opt->{topic};
+  $json->{name}            = $opt->{name}       if $opt->{name};
+  $json->{invite}          = $opt->{invite}     if $opt->{invite};
+  $json->{preset}          = $opt->{preset}     if $opt->{preset};
+  $json->{visibility}      = $opt->{visibility} if $opt->{visbility};
   $req->header( 'Content-Type' => 'application/json' );
   $req->content( to_json($json) );
   my $resp = $lwp->request( $req );
