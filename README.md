@@ -17,14 +17,15 @@ For now it's very limited, and can only send text messages and files to a room. 
   * --password: the password to auth against the HS
   * --server: the HS you want to connect to. Default is https://matrix.org
   * --access_token: can be used instead of --user and --password
-  * --room: the room to which the message must be sent
+  * --room: the room to which the message must be sent. Can be a room ID or a room alias
   * --message: the text message you want to send. If you send something on stdin, it's assumed to be the text to send and this option is ignored
   * --debug: if present, will be verbose
-  * --notice: send a notice instead of a message (more or less the same but the client can display it differently. Riot for example will not notify you for notices)
   * --conf: path to a conf file. Default conf file is ~/.patrixrc
   * --file: if action is send-file, specify the path of the file to send
   * --action: what to do. Valid actions are
     * send-msg (default): send the text message
+    * send-message: an alias for send-msg
+    * send-notice: send a notice. Very similar to send-msg but the client may display it differently. Eg Riot will not notify you for notices
     * send-file: send a binary file. --file must be set
     * get-access-token: just login and print the access token
     * get-room-list: prints the list of public rooms of this server

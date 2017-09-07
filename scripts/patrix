@@ -10,6 +10,7 @@ use Config::Simple;
 use File::HomeDir;
 use File::MimeInfo;
 use File::Basename;
+use URI::Escape;
 use Path::Tiny;
 
 our $opt;
@@ -21,7 +22,6 @@ GetOptions(
   "server=s"         => \$opt->{server},
   "room=s"           => \$opt->{room},
   "message=s"        => \$opt->{message},
-  "notice"           => \$opt->{notice},
   "files=s"          => \$opt->{file},
   "debug"            => \$opt->{debug},
   "action=s"         => \$opt->{action},
@@ -134,7 +134,7 @@ sub join_room(){
   if ($opt->{debug}){
     print "Trying to join room $opt->{room}\n";
   }
-  my $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/join?access_token=' . $opt->{access_token};
+  my $uri = $opt->{server} . '/_matrix/client/r0/join/' . uri_escape( $opt->{room} ) . '?access_token=' . $opt->{access_token};
   my $req = HTTP::Request->new( 'POST', $uri );
   my $json = {};
   $req->header( 'Content-Type' => 'application/json' );
@@ -150,14 +150,14 @@ sub join_room(){
   }
   # Resolve room -> room_id if joined by alias
   my $room_id = from_json($resp->decoded_content)->{room_id};
-  $opt->{roomt} = $room_id if $room_id;
+  $opt->{room} = $room_id if $room_id;
 }
 
 sub send_msg(){
   my $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/send/m.room.message?access_token=' . $opt->{access_token};
   my $req = HTTP::Request->new( 'POST', $uri );
   my $json = {
-    msgtype => ($opt->{notice}) ? 'm.notice' : 'm.text',
+    msgtype => ($opt->{action} eq 'send-notice') ? 'm.notice' : 'm.text',
     body => $opt->{message}
   };
   $req->header( 'Content-Type' => 'application/json' );
@@ -242,7 +242,7 @@ if ($opt->{action} eq 'get-access-token'){
 elsif ($opt->{action} eq 'get-room-list'){
   list_room();
 }
-elsif ($opt->{action} eq 'send-msg'){
+elsif ($opt->{action} =~ m/send\-(msg|message|notice)/){
   join_room();
   send_msg();
 }
