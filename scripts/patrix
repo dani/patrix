@@ -233,27 +233,20 @@ sub list_room(){
   }
 }
 
-if ($opt->{action} eq 'get-access-token'){
+if (!$opt->{access_token}){
   login();
+}
+if ($opt->{action} eq 'get-access-token'){
   print $opt->{access_token} . "\n";
 }
 elsif ($opt->{action} eq 'get-room-list'){
-  login();
   list_room();
 }
 elsif ($opt->{action} eq 'send-msg'){
-  if (defined $opt->{access_token}){
-    join_room();
-    send_msg();
-  }
-  else{
-    login();
-    join_room();
-    send_msg();
-  }
+  join_room();
+  send_msg();
 }
 elsif ($opt->{action} eq 'send-file'){
-  login();
   join_room();
   send_file();
 }
