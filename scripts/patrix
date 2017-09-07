@@ -38,14 +38,12 @@ if ($opt->{conf} && -e $opt->{conf}){
   read_conf();
 }
 
+my $stdin = 0;
 if (!-t STDIN){
-  $opt->{message} = '';
   if ($opt->{debug}){
-    print "Reading message from stdin. --message will be ignored\n\n";
+    print "Reading data from stdin\n\n";
   }
-  while (<STDIN>){
-    $opt->{message} .= $_;
-  }
+  $stdin = 1;
 }
 
 # Set defaults
@@ -59,11 +57,14 @@ if ($opt->{action} eq 'get-access-token' && (!$opt->{user} || !$opt->{password})
 elsif (!$opt->{access_token} && (!$opt->{user} || !$opt->{password})){
   die "You need to provide either an access token or a valid user and password\n\n";
 }
-if ($opt->{action} eq 'send-msg' && (!$opt->{room} || !$opt->{message})){
+if ($opt->{action} eq 'send-msg' && (!$opt->{room} || (!$opt->{message} && !$stdin))){
   die "You need to provide a room ID and a message\n\n";
 }
 if ($opt->{action} eq 'send-file' && (!$opt->{room} || !$opt->{file})){
   die "You need to provide a room ID and a file to send\n\n";
+}
+if ($opt->{action} eq 'send-file' && $opt->{file} && !-e $opt->{file}){
+  die "File $opt->{file} not found\n\n";
 }
 
 $opt->{server} = 'https://' . $opt->{server} unless ($opt->{server} =~ m|https?://|);
@@ -158,6 +159,13 @@ sub join_room {
 sub send_msg {
   my $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/send/m.room.message?access_token=' . $opt->{access_token};
   my $req = HTTP::Request->new( 'POST', $uri );
+  # Ignore --message if reading from stdin
+  if ($stdin){
+    $opt->{message} = '';
+    while (<STDIN>){
+      $opt->{message} .= $_;
+    }
+  }
   my $json = {
     msgtype => ($opt->{action} eq 'send-notice') ? 'm.notice' : 'm.text',
     body => $opt->{message}
@@ -235,6 +243,9 @@ sub send_file {
 # List public rooms
 # Note that there's no pagination handling yet, so you might not have all the results
 sub list_room {
+  if ($opt->{debug}){
+    print "Fetching list of public rooms on $opt->{server}\n";
+  }
   my $uri = $opt->{server} . '/_matrix/client/r0/publicRooms?access_token=' . $opt->{access_token};
   my $req = HTTP::Request->new( 'POST', $uri );
   my $json = {};
