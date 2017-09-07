@@ -52,10 +52,6 @@ if (!-t STDIN){
 $opt->{server} //= 'matrix.org';
 $opt->{action} //= 'send-msg';
 
-# Should we logout at the end ? Only if we used login and pass
-# If we used an access_token, we don't want it to be invalidated
-my $must_logout = ($opt->{access_token}) ? 0 : 1;
-
 # Check we have all the options we need
 if ($opt->{action} eq 'get-access-token' && (!$opt->{user} || !$opt->{password})){
   die "You need to provide a valid user and password to get an access token\n\n";
@@ -64,16 +60,17 @@ elsif (!$opt->{access_token} && (!$opt->{user} || !$opt->{password})){
   die "You need to provide either an access token or a valid user and password\n\n";
 }
 if ($opt->{action} eq 'send-msg' && (!$opt->{room} || !$opt->{message})){
-  die "You need to provide a room ID and a message";
+  die "You need to provide a room ID and a message\n\n";
 }
 if ($opt->{action} eq 'send-file' && (!$opt->{room} || !$opt->{file})){
-  die "You need to provide a room ID and a file to send\n";
+  die "You need to provide a room ID and a file to send\n\n";
 }
 
 $opt->{server} = 'https://' . $opt->{server} unless ($opt->{server} =~ m|https?://|);
 
 my $lwp = LWP::UserAgent->new;
 
+# Load values from the config file if it exists
 sub read_conf {
   my $cfg = Config::Simple->new;
   $cfg->read($opt->{conf});
@@ -84,7 +81,8 @@ sub read_conf {
   }
 }
 
-sub login{
+# Submit user and password the the HS and obtain an access_token
+sub login {
   if ( $opt->{debug} ){
     print "Trying to login on $opt->{server} as $opt->{user}\n";
   }
@@ -110,7 +108,8 @@ sub login{
   $opt->{access_token} = from_json($resp->decoded_content)->{access_token};
 }
 
-sub logout(){
+# Invalidate the access_token
+sub logout {
   if ( $opt->{debug} ){
     print "Trying to logout\n";
   }
@@ -130,10 +129,12 @@ sub logout(){
   }
 }
 
-sub join_room(){
+# Join the specified room, before we can send anything
+sub join_room {
   if ($opt->{debug}){
     print "Trying to join room $opt->{room}\n";
   }
+  # Room must be escaped. if not and room is an alias, it'll start with # so the access_token won't be sent
   my $uri = $opt->{server} . '/_matrix/client/r0/join/' . uri_escape( $opt->{room} ) . '?access_token=' . $opt->{access_token};
   my $req = HTTP::Request->new( 'POST', $uri );
   my $json = {};
@@ -153,7 +154,8 @@ sub join_room(){
   $opt->{room} = $room_id if $room_id;
 }
 
-sub send_msg(){
+# Send a text message (either message or notice as both are similar)
+sub send_msg {
   my $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/send/m.room.message?access_token=' . $opt->{access_token};
   my $req = HTTP::Request->new( 'POST', $uri );
   my $json = {
@@ -163,15 +165,27 @@ sub send_msg(){
   $req->header( 'Content-Type' => 'application/json' );
   $req->content( to_json($json) );
   my $resp = $lwp->request( $req );
+  if ($opt->{debug}){
+    print "Sending message response is\n" .
+          to_json(from_json($resp->decoded_content), { pretty => 1 }) .
+          "\n\n";
+  }
+  unless ( $resp->is_success ){
+    die "Error sending message to $opt->{room}\n";
+  }
 }
 
-sub send_file(){
+# Send a file to the room
+sub send_file {
+  # Sending a file is a 2 steps operation. First we need to upload the file to the media store
+  # And then we post the uri on the room
   if ($opt->{debug}){
     print "Uploading file $opt->{file} to the media store\n\n";
   }
   my $uri = $opt->{server} . '/_matrix/media/v1/upload?access_token=' . $opt->{access_token} . '&filename=' . basename($opt->{file});
   my $req = HTTP::Request->new( 'POST', $uri );
   $req->header( 'Content-Type' => mimetype $opt->{file} );
+  # Not ideal as it won't work for huge files but...
   $req->content( path( $opt->{file} )->slurp_raw );
   my $resp = $lwp->request( $req );
   if ($opt->{debug}){
@@ -182,14 +196,17 @@ sub send_file(){
   unless ( $resp->is_success ){
     die "Error uploading file\n";
   }
+  # If everything went well, the server replied with the URI of our file, which we can
+  # now post on the room
   my $file_uri = from_json($resp->decoded_content)->{content_uri};
   unless ($file_uri){
-    die "Error occurred during file upload\n";
+    die "Server did not sent the file URI\n";
   }
   if ($opt->{debug}){
     print "File uploaded, with the URI $file_uri\n";
     print "Now Sending the file link to the room $opt->{room}\n\n";
   }
+  # Now lets post a new message with the URI of the file
   $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/send/m.room.message?access_token=' . $opt->{access_token};
   $req = HTTP::Request->new( 'POST', $uri );
   my $json = {
@@ -205,12 +222,19 @@ sub send_file(){
   $req->header( 'Content-Type' => 'application/json' );
   $req->content( to_json($json) );
   $resp = $lwp->request( $req );
+  if ($opt->{debug}){
+    print "Posting file link to the room reseponse is\n" .
+          to_json(from_json($resp->decoded_content), { pretty => 1 }) .
+          "\n\n";
+  }
   unless ( $resp->is_success ){
     die "Error posting file link on room $opt->{room}\n";
   }
 }
 
-sub list_room(){
+# List public rooms
+# Note that there's no pagination handling yet, so you might not have all the results
+sub list_room {
   my $uri = $opt->{server} . '/_matrix/client/r0/publicRooms?access_token=' . $opt->{access_token};
   my $req = HTTP::Request->new( 'POST', $uri );
   my $json = {};
@@ -233,6 +257,11 @@ sub list_room(){
   }
 }
 
+# Should we logout at the end ? Only if we used login and pass
+# If we used an access_token, we don't want it to be invalidated
+my $must_logout = ($opt->{access_token}) ? 0 : 1;
+
+# If we don't have an access token, we must get one now
 if (!$opt->{access_token}){
   login();
 }
