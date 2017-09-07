@@ -29,7 +29,7 @@ GetOptions(
   "invite=s@"        => \$opt->{invite},
   "name=s"           => \$opt->{name},
   "alias=s"          => \$opt->{alias},
-  "topic=s"          => \$opt->{topic}
+  "topic=s"          => \$opt->{topic},
 );
 
 if (-e File::HomeDir->my_home . "/.patrixrc" && !$opt->{conf}){
@@ -296,7 +296,7 @@ sub create_room {
     die "Error creating room on $opt->{server}\n";
   }
   my $room_id = from_json($resp->decoded_content)->{room_id};
-  print "Room created with ID $room_id\n";
+  print "$room_id\n";
 }
 
 # Should we logout at the end ? Only if we used login and pass
