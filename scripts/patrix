@@ -25,7 +25,11 @@ GetOptions(
   "files=s"          => \$opt->{file},
   "debug"            => \$opt->{debug},
   "action=s"         => \$opt->{action},
-  "conf=s"           => \$opt->{conf}
+  "conf=s"           => \$opt->{conf},
+  "invite=s@"        => \$opt->{invite},
+  "name=s"           => \$opt->{name},
+  "alias=s"          => \$opt->{alias},
+  "topic=s"          => \$opt->{topic}
 );
 
 if (-e File::HomeDir->my_home . "/.patrixrc" && !$opt->{conf}){
@@ -55,7 +59,7 @@ if ($opt->{action} eq 'get-access-token' && (!$opt->{user} || !$opt->{password})
   die "You need to provide a valid user and password to get an access token\n\n";
 }
 elsif (!$opt->{access_token} && (!$opt->{user} || !$opt->{password})){
-  die "You need to provide either an access token or a valid user and password\n\n";
+  die "Test: You need to provide either an access token or a valid user and password\n\n";
 }
 if ($opt->{action} eq 'send-msg' && (!$opt->{room} || (!$opt->{message} && !$stdin))){
   die "You need to provide a room ID and a message\n\n";
@@ -268,6 +272,33 @@ sub list_room {
   }
 }
 
+# Create a new room
+sub create_room {
+  if ($opt->{debug}){
+    print "Creating a new room on $opt->{server}\n";
+  }
+  my $uri = $opt->{server} . '/_matrix/client/r0/createRoom?access_token=' . $opt->{access_token};
+  my $req = HTTP::Request->new( 'POST', $uri );
+  my $json = {};
+  $json->{room_alias_name} = $opt->{alias}     if $opt->{alias};
+  $json->{topic}           = $opt->{topic}     if $opt->{topic};
+  $json->{name}            = $opt->{name}      if $opt->{name};
+  $json->{invite}          = $opt->{invite} if $opt->{invite};
+  $req->header( 'Content-Type' => 'application/json' );
+  $req->content( to_json($json) );
+  my $resp = $lwp->request( $req );
+  if ($opt->{debug}){
+    print "Room creation response is\n" .
+          to_json(from_json($resp->decoded_content), { pretty => 1 }) .
+          "\n\n";
+  }
+  unless ( $resp->is_success ){
+    die "Error creating room on $opt->{server}\n";
+  }
+  my $room_id = from_json($resp->decoded_content)->{room_id};
+  print "Room created with ID $room_id\n";
+}
+
 # Should we logout at the end ? Only if we used login and pass
 # If we used an access_token, we don't want it to be invalidated
 my $must_logout = ($opt->{access_token}) ? 0 : 1;
@@ -289,6 +320,9 @@ elsif ($opt->{action} =~ m/send\-(msg|message|notice)/){
 elsif ($opt->{action} eq 'send-file'){
   join_room();
   send_file();
+}
+elsif ($opt->{action} eq 'create-room'){
+  create_room();
 }
 
 logout() if $must_logout;
