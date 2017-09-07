@@ -5,10 +5,13 @@ It requires the following perl modules
   * HTTP::Request
   * Config::Simple
   * File::HomeDir
+  * File::Basename
+  * File::MimeInfo
+  * Path::Tiny
   * Getopt::Long
   * JSON
 
-For now it's very limited, and can only send messages to a room. Here're the vailable options:
+For now it's very limited, and can only send text messages and files to a room. Here're the vailable options:
 
   * --user: specify the user you want to login as
   * --password: the password to auth against the HS
@@ -19,8 +22,10 @@ For now it's very limited, and can only send messages to a room. Here're the vai
   * --debug: if present, will be verbose
   * --notice: send a notice instead of a message (more or less the same but the client can display it differently. Riot for example will not notify you for notices)
   * --conf: path to a conf file. Default conf file is ~/.patrixrc
+  * --file: if action is send-file, specify the path of the file to send
   * --action: what to do. Valid actions are
     * send-msg (default): send the text message
+    * send-file: send a binary file. --file must be set
     * get-access-token: just login and print the access token
     * get-room-list: prints the list of public rooms of this server
 
