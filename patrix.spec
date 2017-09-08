@@ -1,5 +1,5 @@
 Name: patrix
-Version: 0.1.0
+Version: 0.1.1
 Release: 1%{?dist}
 Summary: Command line client for Matrix
 
@@ -48,5 +48,8 @@ room via the command line.
 %{_bindir}/patrix
 
 %changelog
+* Fri Sep 8 2017 Daniel Berteaud <daniel@firewall-services.com> - 0.1.1-1
+- New release
+
 * Wed Sep 6 2017 Daniel B. <daniel@firewall-services.com> - 0.1.0-1
 - Initial release
