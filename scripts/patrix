@@ -68,14 +68,28 @@ if ($opt->{action} eq 'send-file' && (!$opt->{room} || !$opt->{file})){
 if ($opt->{action} eq 'send-file' && $opt->{file} && !-e $opt->{file}){
   die "File $opt->{file} not found\n\n";
 }
+if ($opt->{action} eq 'modify-room' && !$opt->{room}){
+  die "You need to specify the room to modify\n\n";
+}
 
 $opt->{server} = 'https://' . $opt->{server} unless ($opt->{server} =~ m|https?://|);
 
 my $lwp = LWP::UserAgent->new;
 
+# Print debug info if debug is enabled
 sub debug {
   my $msg = shift;
   print "$msg\n\n" if $opt->{debug};
+}
+
+sub send_json_request {
+  my ($method,$uri,$content) = @_;
+  my $req = HTTP::Request->new( $method, $uri );
+  $req->header( 'Content-Type' => 'application/json' );
+  $req->content( to_json($content) );
+  my $resp = $lwp->request( $req );
+  debug("Server responded:\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
+  return $resp;
 }
 
 # Load values from the config file if it exists
@@ -93,16 +107,12 @@ sub read_conf {
 sub login {
   debug("Trying to login on $opt->{server} as $opt->{user}");
   my $uri = $opt->{server} . '/_matrix/client/r0/login';
-  my $req = HTTP::Request->new( 'POST', $uri );
   my $json = {
     type     => 'm.login.password',
     user     => $opt->{user},
     password => $opt->{password}
   };
-  $req->header( 'Content-Type' => 'application/json' );
-  $req->content( to_json($json) );
-  my $resp = $lwp->request( $req );
-  debug("Login response is\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
+  my $resp = send_json_request( 'POST', $uri, $json);
   unless ( $resp->is_success ){
     die "Error login in, please check your credentials\n";
   }
@@ -114,12 +124,7 @@ sub login {
 sub logout {
   debug("Trying to logout");
   my $uri = $opt->{server} . '/_matrix/client/r0/logout?access_token=' . $opt->{access_token};
-  my $req = HTTP::Request->new( 'POST', $uri );
-  my $json = {};
-  $req->header( 'Content-Type' => 'application/json' );
-  $req->content( to_json($json) );
-  my $resp = $lwp->request( $req );
-  debug("Logout response is\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
+  my $resp = send_json_request( 'POST', $uri, {} );
   unless ( $resp->is_success ){
     die "Error login out\n";
   }
@@ -130,11 +135,7 @@ sub join_room {
   debug("Trying to join room $opt->{room}");
   # Room must be escaped. if not and room is an alias, it'll start with # so the access_token won't be sent
   my $uri = $opt->{server} . '/_matrix/client/r0/join/' . uri_escape( $opt->{room} ) . '?access_token=' . $opt->{access_token};
-  my $req = HTTP::Request->new( 'POST', $uri );
-  my $json = {};
-  $req->header( 'Content-Type' => 'application/json' );
-  $req->content( to_json($json) );
-  my $resp = $lwp->request( $req );
+  my $resp = send_json_request( 'POST', $uri, {} );
   debug("Joining room response is\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
   unless ( $resp->is_success ){
     die "Error joining room $opt->{room}\n";
@@ -147,7 +148,6 @@ sub join_room {
 # Send a text message (either message or notice as both are similar)
 sub send_msg {
   my $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/send/m.room.message?access_token=' . $opt->{access_token};
-  my $req = HTTP::Request->new( 'POST', $uri );
   # Ignore --message if reading from stdin
   if ($stdin){
     $opt->{message} = '';
@@ -159,10 +159,7 @@ sub send_msg {
     msgtype => ($opt->{action} eq 'send-notice') ? 'm.notice' : 'm.text',
     body => $opt->{message}
   };
-  $req->header( 'Content-Type' => 'application/json' );
-  $req->content( to_json($json) );
-  my $resp = $lwp->request( $req );
-  debug("Sending message response is\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
+  my $resp = send_json_request( 'POST', $uri, $json );
   unless ( $resp->is_success ){
     die "Error sending message to $opt->{room}\n";
   }
@@ -192,7 +189,6 @@ sub send_file {
   debug("File uploaded, with the URI $file_uri\nNow Sending the file link to the room $opt->{room}");
   # Now lets post a new message with the URI of the file
   $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/send/m.room.message?access_token=' . $opt->{access_token};
-  $req = HTTP::Request->new( 'POST', $uri );
   my $json = {
     msgtype  => 'm.file',
     body     => basename($opt->{file}),
@@ -203,10 +199,7 @@ sub send_file {
     },
     url      => $file_uri
   };
-  $req->header( 'Content-Type' => 'application/json' );
-  $req->content( to_json($json) );
-  $resp = $lwp->request( $req );
-  debug("Posting file link to the room reseponse is\n" .  to_json(from_json($resp->decoded_content), { pretty => 1 }));
+  $resp = send_json_request( 'POST', $uri, $json);
   unless ( $resp->is_success ){
     die "Error posting file link on room $opt->{room}\n";
   }
@@ -217,14 +210,11 @@ sub send_file {
 sub list_room {
   debug("Fetching list of public rooms on $opt->{server}");
   my $uri = $opt->{server} . '/_matrix/client/r0/publicRooms?access_token=' . $opt->{access_token};
-  my $req = HTTP::Request->new( 'POST', $uri );
-  my $json = {};
-  $req->header( 'Content-Type' => 'application/json' );
-  $req->content( to_json($json) );
-  my $resp = $lwp->request( $req );
+  my $resp = send_json_request( 'POST', $uri, {} );;
   unless ( $resp->is_success ){
     die "Error joining room $opt->{room}\n";
   }
+  # TODO: Handle pagination
   debug("List rooms response is\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
   print "Existing Rooms:\n";
   foreach (@{from_json($resp->decoded_content)->{chunk}}){
@@ -238,17 +228,13 @@ sub list_room {
 sub create_room {
   debug("Creating a new room on $opt->{server}");
   my $uri = $opt->{server} . '/_matrix/client/r0/createRoom?access_token=' . $opt->{access_token};
-  my $req = HTTP::Request->new( 'POST', $uri );
   my $json = {};
   $json->{room_alias_name} = $opt->{alias}      if $opt->{alias};
   $json->{topic}           = $opt->{topic}      if $opt->{topic};
   $json->{name}            = $opt->{name}       if $opt->{name};
   $json->{invite}          = $opt->{invite}     if $opt->{invite};
   $json->{creation_content}->{'m.federate'} = $opt->{federation};
-  $req->header( 'Content-Type' => 'application/json' );
-  $req->content( to_json($json) );
-  my $resp = $lwp->request( $req );
-  debug("Room creation response is\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
+  my $resp = send_json_request( 'POST', $uri, $json);
   unless ( $resp->is_success ){
     die "Error creating room on $opt->{server}\n";
   }
@@ -263,14 +249,10 @@ sub modify_room {
   # A new alias should be added
   if ($opt->{alias}){
     $uri = $opt->{server} . '/_matrix/client/r0/directory/room/' . uri_escape($opt->{alias}) . '?access_token=' . $opt->{access_token};
-    $req = HTTP::Request->new( 'PUT', $uri );
     $json = {
       room_id => $opt->{room}
     };
-    $req->header( 'Content-Type' => 'application/json' );
-    $req->content( to_json($json) );
-    $resp = $lwp->request( $req );
-    debug("New alias response is\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
+    $resp = send_json_request('PUT', $uri, $json);
     unless ( $resp->is_success ){
       die "Error adding new alias $opt->{alias} for room $opt->{room} on server $opt->{server}\n";
     }
@@ -278,14 +260,10 @@ sub modify_room {
   # The name of the room is being updated
   if ($opt->{name}){
     $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/state/m.room.name?access_token=' . $opt->{access_token};
-    $req = HTTP::Request->new( 'PUT', $uri );
     $json = {
       name => $opt->{name}
     };
-    $req->header( 'Content-Type' => 'application/json' );
-    $req->content( to_json($json) );
-    $resp = $lwp->request( $req );
-    debug("modifying room name response is\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
+    $resp = send_json_request('PUT', $uri, $json);
     unless ( $resp->is_success ){
       die "Error changing name of room $opt->{room}\n";
     }
@@ -293,14 +271,10 @@ sub modify_room {
   # The topic is being updated
   if ($opt->{topic}){
     $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/state/m.room.topic?access_token=' . $opt->{access_token};
-    $req = HTTP::Request->new( 'PUT', $uri );
     $json = {
       topic => $opt->{topic}
     };
-    $req->header( 'Content-Type' => 'application/json' );
-    $req->content( to_json($json) );
-    $resp = $lwp->request( $req );
-    debug("modifying room topic response is\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
+    $resp = send_json_request('PUT', $uri, $json);
     unless ( $resp->is_success ){
       die "Error changing topic of room $opt->{room}\n";
     }
@@ -309,14 +283,10 @@ sub modify_room {
   if ($opt->{invite}){
     $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/invite?access_token=' . $opt->{access_token};
     foreach my $invite (@{$opt->{invite}}){
-      $req = HTTP::Request->new( 'POST', $uri );
       $json = {
         user_id => $invite
       };
-      $req->header( 'Content-Type' => 'application/json' );
-      $req->content( to_json($json) );
-      $resp = $lwp->request( $req );
-      debug("modifying room topic response is\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
+      $resp = send_json_request('POST', $uri, $json);
       # TODO: just warn if already invited
       unless ( $resp->is_success ){
         die "Error inviting user $invite in room $opt->{room}\n";
