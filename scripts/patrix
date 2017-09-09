@@ -306,6 +306,93 @@ sub create_room {
   print "$room_id\n";
 }
 
+# Modify an existing room
+sub modify_room {
+  if ($opt->{debug}){
+    print "Modifying room $opt->{room} on $opt->{server}\n";
+  }
+  my ($uri,$req,$json,$resp);
+  # A new alias should be added
+  if ($opt->{alias}){
+    $uri = $opt->{server} . '/_matrix/client/r0/directory/room/' . uri_escape($opt->{alias}) . '?access_token=' . $opt->{access_token};
+    $req = HTTP::Request->new( 'PUT', $uri );
+    $json = {
+      room_id => $opt->{room}
+    };
+    $req->header( 'Content-Type' => 'application/json' );
+    $req->content( to_json($json) );
+    $resp = $lwp->request( $req );
+    if ($opt->{debug}){
+      print "New alias response is\n" .
+            to_json(from_json($resp->decoded_content), { pretty => 1 }) .
+            "\n\n";
+    }
+    unless ( $resp->is_success ){
+      die "Error adding new alias $opt->{alias} for room $opt->{room} on server $opt->{server}\n";
+    }
+  }
+  # The name of the room is being updated
+  if ($opt->{name}){
+    $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/state/m.room.name?access_token=' . $opt->{access_token};
+    $req = HTTP::Request->new( 'PUT', $uri );
+    $json = {
+      name => $opt->{name}
+    };
+    $req->header( 'Content-Type' => 'application/json' );
+    $req->content( to_json($json) );
+    $resp = $lwp->request( $req );
+    if ($opt->{debug}){
+      print "modifying room name response is\n" .
+            to_json(from_json($resp->decoded_content), { pretty => 1 }) .
+            "\n\n";
+    }
+    unless ( $resp->is_success ){
+      die "Error changing name of room $opt->{room}\n";
+    }
+  }
+  # The topic is being updated
+  if ($opt->{topic}){
+    $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/state/m.room.topic?access_token=' . $opt->{access_token};
+    $req = HTTP::Request->new( 'PUT', $uri );
+    $json = {
+      topic => $opt->{topic}
+    };
+    $req->header( 'Content-Type' => 'application/json' );
+    $req->content( to_json($json) );
+    $resp = $lwp->request( $req );
+    if ($opt->{debug}){
+      print "modifying room topic response is\n" .
+            to_json(from_json($resp->decoded_content), { pretty => 1 }) .
+            "\n\n";
+    }
+    unless ( $resp->is_success ){
+      die "Error changing topic of room $opt->{room}\n";
+    }
+  }
+  # New invitees should be added
+  if ($opt->{invite}){
+    $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/invite?access_token=' . $opt->{access_token};
+    foreach my $invite (@{$opt->{invite}}){
+      $req = HTTP::Request->new( 'POST', $uri );
+      $json = {
+        user_id => $invite
+      };
+      $req->header( 'Content-Type' => 'application/json' );
+      $req->content( to_json($json) );
+      $resp = $lwp->request( $req );
+      if ($opt->{debug}){
+        print "modifying room topic response is\n" .
+              to_json(from_json($resp->decoded_content), { pretty => 1 }) .
+              "\n\n";
+      }
+      # TODO: just warn if already invited
+      unless ( $resp->is_success ){
+        die "Error inviting user $invite in room $opt->{room}\n";
+      }
+    }
+  }
+}
+
 # Should we logout at the end ? Only if we used login and pass
 # If we used an access_token, we don't want it to be invalidated
 my $must_logout = ($opt->{access_token}) ? 0 : 1;
@@ -330,6 +417,9 @@ elsif ($opt->{action} eq 'send-file'){
 }
 elsif ($opt->{action} eq 'create-room'){
   create_room();
+}
+elsif ($opt->{action} eq 'modify-room'){
+  modify_room();
 }
 
 logout() if $must_logout;

@@ -23,10 +23,10 @@ For now it's very limited, and can only send text messages and files to a room. 
   * --debug: if present, will be verbose
   * --conf: path to a conf file. Default conf file is ~/.patrixrc
   * --file: if action is send-file, specify the path of the file to send
-  * --invite: a matrix ID (@user:server.domain.tld) to invite in a room. Can be specified several times
-  * --name: set the name of a room
-  * --topic: set the topic of a room
-  * --alias: set an alias for a room
+  * --invite: a matrix ID (@user:server.domain.tld) to invite in a room. Can be specified several times. Valid for create-room and modify-room
+  * --name: set the name of a room. Valid for create-room and modify-room
+  * --topic: set the topic of a room. Valid for create-room and modify-room
+  * --alias: set an alias for a room. Valid for create-room and modify-room
   * --federation: Enable the federation when creating a room. Default is enabled. Can be turned of with --no-federation
   * --action: what to do. Valid actions are
     * send-msg (default): send the text message
@@ -34,6 +34,7 @@ For now it's very limited, and can only send text messages and files to a room. 
     * send-notice: send a notice. Very similar to send-msg but the client may display it differently. Eg Riot will not notify you for notices
     * send-file: send a binary file. --file must be set
     * create-room: create a new room
+    * modify-room: change an existing room (add an alias, set name, topic or invite)
     * get-access-token: just login and print the access token
     * get-room-list: prints the list of public rooms of this server
 
