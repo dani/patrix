@@ -31,7 +31,8 @@ GetOptions(
   "alias=s"          => \$opt->{alias},
   "topic=s"          => \$opt->{topic},
   "preset=s"         => \$opt->{preset},
-  "visibility=s"     => \$opt->{visibility}
+  "visibility=s"     => \$opt->{visibility},
+  "federation!"      => \$opt->{federation}
 );
 
 if (-e File::HomeDir->my_home . "/.patrixrc" && !$opt->{conf}){
@@ -53,8 +54,9 @@ if (!-t STDIN){
 }
 
 # Set defaults
-$opt->{server} //= 'matrix.org';
-$opt->{action} //= 'send-msg';
+$opt->{server}     //= 'matrix.org';
+$opt->{action}     //= 'send-msg';
+$opt->{federation} //= 1;
 
 # Check we have all the options we need
 if ($opt->{action} eq 'get-access-token' && (!$opt->{user} || !$opt->{password})){
@@ -288,6 +290,7 @@ sub create_room {
   $json->{invite}          = $opt->{invite}     if $opt->{invite};
   $json->{preset}          = $opt->{preset}     if $opt->{preset};
   $json->{visibility}      = $opt->{visibility} if $opt->{visbility};
+  $json->{creation_content}->{'m.federate'} = $opt->{federation};
   $req->header( 'Content-Type' => 'application/json' );
   $req->content( to_json($json) );
   my $resp = $lwp->request( $req );

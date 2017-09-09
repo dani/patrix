@@ -1,4 +1,4 @@
-patrix is a simple command line client for [Matrix](https://matrix.org) written in perl. It can send text messages or files to rooms. I use it to send [Zabbix](https://www.zabbix.com) alerts to a Matrix room, a bit like [sendxmpp](https://github.com/lhost/sendxmpp) can do with XMPP.
+patrix is a simple command line client for [Matrix](https://matrix.org) written in perl. It can create rooms, send text messages or files to rooms. I use it to send [Zabbix](https://www.zabbix.com) alerts to a Matrix room, a bit like [sendxmpp](https://github.com/lhost/sendxmpp) can do with XMPP.
 
 It requires the following perl modules
   * LWP::UserAgent
@@ -27,6 +27,7 @@ For now it's very limited, and can only send text messages and files to a room. 
   * --name: set the name of a room
   * --topic: set the topic of a room
   * --alias: set an alias for a room
+  * --federation: Enable the federation when creating a room. Default is enabled. Can be turned of with --no-federation
   * --action: what to do. Valid actions are
     * send-msg (default): send the text message
     * send-message: an alias for send-msg
