@@ -12,6 +12,7 @@ use File::MimeInfo;
 use File::Basename;
 use URI::Escape;
 use Path::Tiny;
+use Term::ReadKey;
 
 our $opt;
 
@@ -52,6 +53,16 @@ if (!-t STDIN){
 $opt->{server}     //= 'matrix.org';
 $opt->{action}     //= 'send-msg';
 $opt->{federation} //= 1;
+
+# Prompt to enter the password
+if (!$opt->{access_token} && $opt->{user} && !$opt->{password}){
+  ReadMode('noecho');
+  print "Password: ";
+  $opt->{password} = ReadLine(0);
+  $opt->{password} =~ s/\R\z//;
+  ReadMode('restore');
+  print "\n";
+}
 
 # Check we have all the options we need
 if ($opt->{action} eq 'get-access-token' && (!$opt->{user} || !$opt->{password})){
