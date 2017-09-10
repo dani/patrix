@@ -94,6 +94,7 @@ sub debug {
   print "$msg\n\n" if $opt->{debug};
 }
 
+# Send a request to Matrix server and return the raw response
 sub send_request {
   my $param = shift;
   $param->{method}       ||= 'POST';
