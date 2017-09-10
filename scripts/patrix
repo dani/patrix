@@ -302,9 +302,15 @@ sub modify_room {
         uri => $uri,
         content => to_json($json)
       });
-      # TODO: just warn if already invited
-      die "Error inviting user $invite in room $opt->{room}\n"
-        unless ($resp->is_success);
+      unless ($resp->is_success){
+        my $error = from_json($resp->decoded_content);
+        if ($error->{error} eq $invite . ' is already in the room.' && $error->{errcode} eq 'M_FORBIDDEN'){
+          debug($invite . 'has already been invited in this room, ignoring');
+        }
+        else{
+          die "Error inviting user $invite in room $opt->{room}\n";
+        }
+      }
     }
   }
 }
