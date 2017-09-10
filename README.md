@@ -43,6 +43,7 @@ Here're the vailable options:
     * send-file: send a binary file. --file must be set
     * create-room: create a new room
     * modify-room: change an existing room (add an alias, set name, topic, join_rules, invite)
+    * del-room-alias: remove an existing room alias
     * get-access-token: just login and print the access token
     * get-room-list: prints the list of public rooms of this server
     * get-room-id: resolve a room alias to its ID

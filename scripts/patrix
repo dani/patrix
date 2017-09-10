@@ -101,6 +101,9 @@ if ($opt->{action} eq 'send-file' && $opt->{file} && !-e $opt->{file}){
 if ($opt->{action} eq 'modify-room' && !$opt->{room}){
   die "You need to specify the room to modify\n\n";
 }
+if ($opt->{action} =~ m/^(remove|delete|del)\-room\-alias$/ and !$opt->{alias}){
+  die "You must specify the alias to remove\n\n";
+}
 
 # Print debug info if debug is enabled
 sub debug {
@@ -452,6 +455,16 @@ sub modify_room {
   }
 }
 
+sub del_room_alias {
+  debug("Removing room alias $opt->{alias}");
+  my $uri = $opt->{server} . "/_matrix/client/r0/directory/room/" . uri_escape($opt->{alias}) . '?access_token=' . $opt->{access_token};
+  my $resp = send_request({
+    method => 'DELETE',
+    uri    => $uri
+  });
+  die "Error removing the alias\n" unless ($resp->is_success);
+}
+
 # Should we logout at the end ? Only if we used login and pass
 # If we used an access_token, we don't want it to be invalidated
 my $must_logout = ($opt->{access_token}) ? 0 : 1;
@@ -469,7 +482,7 @@ elsif ($opt->{action} eq 'get-room-list'){
 elsif ($opt->{action} eq 'get-room-id'){
   print room_alias_to_id($opt->{room}) . "\n";
 }
-elsif ($opt->{action} =~ m/send\-(msg|message|notice)/){
+elsif ($opt->{action} =~ m/^send\-(msg|message|notice)$/){
   join_room();
   send_msg();
 }
@@ -482,6 +495,9 @@ elsif ($opt->{action} eq 'create-room'){
 }
 elsif ($opt->{action} eq 'modify-room'){
   modify_room();
+}
+elsif ($opt->{action} =~ m/^(remove|delete|del)\-room\-alias$/){
+  del_room_alias();
 }
 
 logout() if $must_logout;

@@ -5,5 +5,4 @@
 * Set room avatar
 * Configure user profile (name, avatar)
 * Follow discussion of a room (like a tail -f of the room discussion)
-* Delete a room alias
 * Ban / Kick users
