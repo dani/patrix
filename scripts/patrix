@@ -30,6 +30,7 @@ GetOptions(
   "name=s"           => \$opt->{name},
   "alias=s"          => \$opt->{alias},
   "topic=s"          => \$opt->{topic},
+  "join_rules=s"     => \$opt->{join_rules},
   "federation!"      => \$opt->{federation}
 );
 
@@ -291,6 +292,20 @@ sub modify_room {
     die "Error changing topic of room $opt->{room}\n"
       unless ($resp->is_success);
   }
+  # Changing joining rules
+  if ($opt->{join_rules}){
+    $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/state/m.room.join_rules?access_token=' . $opt->{access_token};
+    $json = {
+      join_rules => $opt->{join_rules}
+    };
+    $resp = send_request({
+      method  => 'PUT',
+      uri     => $uri,
+      content => to_json($json)
+    });
+    die "Error changing joining rules of room $opt->{room}\n"
+      unless ($resp->is_success);
+  }
   # New invitees should be added
   if ($opt->{invite}){
     $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/invite?access_token=' . $opt->{access_token};
@@ -299,13 +314,13 @@ sub modify_room {
         user_id => $invite
       };
       $resp = send_request({
-        uri => $uri,
+        uri     => $uri,
         content => to_json($json)
       });
       unless ($resp->is_success){
         my $error = from_json($resp->decoded_content);
         if ($error->{error} eq $invite . ' is already in the room.' && $error->{errcode} eq 'M_FORBIDDEN'){
-          debug($invite . 'has already been invited in this room, ignoring');
+          debug($invite . ' has already been invited in this room, ignoring');
         }
         else{
           die "Error inviting user $invite in room $opt->{room}\n";
