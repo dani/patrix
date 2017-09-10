@@ -39,6 +39,7 @@ For now it's very limited, and can only send text messages and files to a room. 
     * modify-room: change an existing room (add an alias, set name, topic, join_rules, invite)
     * get-access-token: just login and print the access token
     * get-room-list: prints the list of public rooms of this server
+    * get-room-id: resolve a room alias to its ID
 
 All the available options can be set a the configuration file using a simple ini style format, eg
 
