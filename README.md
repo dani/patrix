@@ -61,3 +61,9 @@ patrix --action=send-file --file=/home/dani/archive.tgz --user=dani --password=s
 ```
 patrix --debug --message="Hello World"
 ```
+```
+patrix --action=create-room --name="Human readable room name" --invite="@dani:matrix.example.com"
+```
+```
+patrix --action=modify-room --join_rules=public --topic='New topic' --room='!uXfknaWNcAnvthnIms:matrix.example.com' --invite='@admin:matrix.example.com'
+```
