@@ -85,8 +85,8 @@ sub debug {
 sub send_json_request {
   my ($method,$uri,$content) = @_;
   my $req = HTTP::Request->new( $method, $uri );
-  $req->header( 'Content-Type' => 'application/json' );
-  $req->content( to_json($content) );
+  $req->header('Content-Type' => 'application/json');
+  $req->content(to_json($content));
   my $resp = $lwp->request( $req );
   debug("Server responded:\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
   return $resp;
@@ -112,22 +112,19 @@ sub login {
     user     => $opt->{user},
     password => $opt->{password}
   };
-  my $resp = send_json_request( 'POST', $uri, $json);
-  unless ( $resp->is_success ){
-    die "Error login in, please check your credentials\n";
-  }
+  my $resp = send_json_request('POST', $uri, $json);
+  die "Error login in, please check your credentials\n" unless ($resp->is_success);
   # Set the access token
   $opt->{access_token} = from_json($resp->decoded_content)->{access_token};
+  die "No access token in server response\n" if !$opt->{access_token};
 }
 
 # Invalidate the access_token
 sub logout {
   debug("Trying to logout");
   my $uri = $opt->{server} . '/_matrix/client/r0/logout?access_token=' . $opt->{access_token};
-  my $resp = send_json_request( 'POST', $uri, {} );
-  unless ( $resp->is_success ){
-    die "Error login out\n";
-  }
+  my $resp = send_json_request('POST', $uri, {});
+  die "Error login out\n" unless ($resp->is_success);
 }
 
 # Join the specified room, before we can send anything
@@ -136,12 +133,10 @@ sub join_room {
   # Room must be escaped. if not and room is an alias, it'll start with # so the access_token won't be sent
   my $uri = $opt->{server} . '/_matrix/client/r0/join/' . uri_escape( $opt->{room} ) . '?access_token=' . $opt->{access_token};
   my $resp = send_json_request( 'POST', $uri, {} );
-  debug("Joining room response is\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
-  unless ( $resp->is_success ){
-    die "Error joining room $opt->{room}\n";
-  }
+  die "Error joining room $opt->{room}\n" unless ($resp->is_success);
   # Resolve room -> room_id if joined by alias
   my $room_id = from_json($resp->decoded_content)->{room_id};
+  # TODO: Provide a generic Alias -> ID resolver
   $opt->{room} = $room_id if $room_id;
 }
 
@@ -151,18 +146,14 @@ sub send_msg {
   # Ignore --message if reading from stdin
   if ($stdin){
     $opt->{message} = '';
-    while (<STDIN>){
-      $opt->{message} .= $_;
-    }
+    $opt->{message} .= $_ while (<STDIN>);
   }
   my $json = {
     msgtype => ($opt->{action} eq 'send-notice') ? 'm.notice' : 'm.text',
     body => $opt->{message}
   };
-  my $resp = send_json_request( 'POST', $uri, $json );
-  unless ( $resp->is_success ){
-    die "Error sending message to $opt->{room}\n";
-  }
+  my $resp = send_json_request('POST', $uri, $json);
+  die "Error sending message to $opt->{room}\n" unless ($resp->is_success);
 }
 
 # Send a file to the room
@@ -177,15 +168,11 @@ sub send_file {
   $req->content( path( $opt->{file} )->slurp_raw );
   my $resp = $lwp->request( $req );
   debug("File upload response is\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
-  unless ( $resp->is_success ){
-    die "Error uploading file\n";
-  }
+  die "Error uploading file\n" unless ($resp->is_success);
   # If everything went well, the server replied with the URI of our file, which we can
   # now post on the room
   my $file_uri = from_json($resp->decoded_content)->{content_uri};
-  unless ($file_uri){
-    die "Server did not sent the file URI\n";
-  }
+  die "Server did not sent the file URI\n" unless ($file_uri);
   debug("File uploaded, with the URI $file_uri\nNow Sending the file link to the room $opt->{room}");
   # Now lets post a new message with the URI of the file
   $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/send/m.room.message?access_token=' . $opt->{access_token};
@@ -199,10 +186,8 @@ sub send_file {
     },
     url      => $file_uri
   };
-  $resp = send_json_request( 'POST', $uri, $json);
-  unless ( $resp->is_success ){
-    die "Error posting file link on room $opt->{room}\n";
-  }
+  $resp = send_json_request('POST', $uri, $json);
+  die "Error posting file link on room $opt->{room}\n" unless ($resp->is_success);
 }
 
 # List public rooms
@@ -210,10 +195,8 @@ sub send_file {
 sub list_room {
   debug("Fetching list of public rooms on $opt->{server}");
   my $uri = $opt->{server} . '/_matrix/client/r0/publicRooms?access_token=' . $opt->{access_token};
-  my $resp = send_json_request( 'POST', $uri, {} );;
-  unless ( $resp->is_success ){
-    die "Error joining room $opt->{room}\n";
-  }
+  my $resp = send_json_request('POST', $uri, {});;
+  die "Error joining room $opt->{room}\n" unless ($resp->is_success);
   # TODO: Handle pagination
   debug("List rooms response is\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
   print "Existing Rooms:\n";
@@ -234,10 +217,8 @@ sub create_room {
   $json->{name}            = $opt->{name}       if $opt->{name};
   $json->{invite}          = $opt->{invite}     if $opt->{invite};
   $json->{creation_content}->{'m.federate'} = $opt->{federation};
-  my $resp = send_json_request( 'POST', $uri, $json);
-  unless ( $resp->is_success ){
-    die "Error creating room on $opt->{server}\n";
-  }
+  my $resp = send_json_request('POST', $uri, $json);
+  die "Error creating room on $opt->{server}\n" unless ($resp->is_success);
   my $room_id = from_json($resp->decoded_content)->{room_id};
   print "$room_id\n";
 }
@@ -253,9 +234,8 @@ sub modify_room {
       room_id => $opt->{room}
     };
     $resp = send_json_request('PUT', $uri, $json);
-    unless ( $resp->is_success ){
-      die "Error adding new alias $opt->{alias} for room $opt->{room} on server $opt->{server}\n";
-    }
+    die "Error adding new alias $opt->{alias} for room $opt->{room} on server $opt->{server}\n"
+      unless ($resp->is_success);
   }
   # The name of the room is being updated
   if ($opt->{name}){
@@ -264,9 +244,8 @@ sub modify_room {
       name => $opt->{name}
     };
     $resp = send_json_request('PUT', $uri, $json);
-    unless ( $resp->is_success ){
-      die "Error changing name of room $opt->{room}\n";
-    }
+    die "Error changing name of room $opt->{room}\n"
+      unless ($resp->is_success);
   }
   # The topic is being updated
   if ($opt->{topic}){
@@ -275,9 +254,8 @@ sub modify_room {
       topic => $opt->{topic}
     };
     $resp = send_json_request('PUT', $uri, $json);
-    unless ( $resp->is_success ){
-      die "Error changing topic of room $opt->{room}\n";
-    }
+    die "Error changing topic of room $opt->{room}\n"
+      unless ($resp->is_success);
   }
   # New invitees should be added
   if ($opt->{invite}){
@@ -288,9 +266,8 @@ sub modify_room {
       };
       $resp = send_json_request('POST', $uri, $json);
       # TODO: just warn if already invited
-      unless ( $resp->is_success ){
-        die "Error inviting user $invite in room $opt->{room}\n";
-      }
+      die "Error inviting user $invite in room $opt->{room}\n"
+        unless ($resp->is_success);
     }
   }
 }
