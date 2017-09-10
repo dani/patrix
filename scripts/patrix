@@ -417,7 +417,7 @@ sub modify_room {
       }
     }
     my $perm = merge($current_perm, $new_perm);
-    print to_json($perm, { pretty => 1 });
+    debug("New permissions for this room will be:\n" . to_json($perm, { pretty => 1 }));
     $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/state/m.room.power_levels?access_token=' . $opt->{access_token};
     $resp = send_request({
       method  => 'PUT',
