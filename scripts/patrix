@@ -13,7 +13,8 @@ use File::Basename;
 use URI::Escape;
 use Path::Tiny;
 use Term::ReadKey;
-use Data::Dumper;
+use Hash::Merge::Simple qw(merge);
+use Scalar::Util qw(looks_like_number);
 
 our $opt;
 
@@ -33,7 +34,11 @@ GetOptions(
   "alias=s"          => \$opt->{alias},
   "topic=s"          => \$opt->{topic},
   "join_rules=s"     => \$opt->{join_rules},
-  "federation!"      => \$opt->{federation}
+  "federation!"      => \$opt->{federation},
+  "perm=s@"          => \$opt->{perm},
+  "perm_user=s@"     => \$opt->{perm_user},
+  "perm_event=s@"    => \$opt->{perm_user},
+  "perm_reset"       => \$opt->{perm_reset}
 );
 
 if (-e File::HomeDir->my_home . "/.patrixrc" && !$opt->{conf}){
@@ -58,7 +63,9 @@ $opt->{action}     //= 'send-msg';
 $opt->{federation} //= 1;
 $opt->{server}     = 'https://' . $opt->{server} unless ($opt->{server} =~ m|https?://|);
 
-# Prompt to enter the password
+# No password on the command line or the conf file
+# And no access token
+# Prompt to type the password
 if (!$opt->{access_token} && $opt->{user} && !$opt->{password}){
   ReadMode('noecho');
   print "Password: ";
@@ -68,6 +75,8 @@ if (!$opt->{access_token} && $opt->{user} && !$opt->{password}){
   print "\n";
 }
 
+# If the given room starts with #, then it's an alias
+# Lets resolve this to the room ID
 if ($opt->{room} && $opt->{room} =~ m/^#/){
   $opt->{room} = room_alias_to_id($opt->{room});
   debug('Room ID is ' . $opt->{room});
@@ -176,6 +185,27 @@ sub join_room {
     uri => $uri
   });
   die "Error joining room $opt->{room}\n" unless ($resp->is_success);
+}
+
+# Retrieve the actual permissions for a room
+sub get_room_permissions {
+  debug('Getting actual room state');
+  my $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/state/m.room.power_levels?access_token=' . $opt->{access_token};
+  my $resp = send_request({
+    method => 'GET',
+    uri    => $uri
+  });
+  die "Error joining room $opt->{room}\n" unless ($resp->is_success);
+  return from_json($resp->decoded_content);
+}
+
+# Return the user ID of the operator
+sub who_am_i {
+  # We could get user_id if we login with user/pass but what if we use an access token ?
+  # Lets just build it manually for now
+  my $server = $opt->{server};
+  $server =~ s|^https?://||;
+  return '@' . $opt->{user} .':' . $server;
 }
 
 # Send a text message (either message or notice as both are similar)
@@ -334,6 +364,67 @@ sub modify_room {
       content => to_json($json)
     });
     die "Error changing joining rules of room $opt->{room}\n"
+      unless ($resp->is_success);
+  }
+  # Permissions modification
+  if ($opt->{perm} || $opt->{perm_user} || $opt->{perm_event} || $opt->{perm_reset}){
+    debug('Changing permissions for the room');
+    my $current_perm = get_room_permissions();
+    # If we asked to reset the permission
+    if ($opt->{perm_reset}){
+      my $operator = who_am_i();
+      my $reset_perm = {
+        events => {
+          "m.room.avatar"             => 50,
+          "m.room.canonical_alias"    => 50,
+          "m.room.name"               => 50,
+          "m.room.power_levels"       => 100,
+          "m.room.history_visibility" => 100
+        },
+      };
+      # Ensure we keep at least the permission of the operating user
+      # Note that we must also keep the permission of anyone who has at least the same level
+      # of privilege, or the operation will be forbidden
+      foreach my $user (keys %{$current_perm->{users}}){
+        if (looks_like_number($current_perm->{users}->{$user}) &&
+            $current_perm->{users}->{$user} >= $current_perm->{users}->{$operator}){
+          debug("Keeping permission of $user because it has at least the same privileges " .
+                "($current_perm->{users}->{$user} vs $current_perm->{users}->{$operator})");
+          $reset_perm->{users}->{$user} = $current_perm->{users}->{$user};
+        }
+      }
+      $current_perm = $reset_perm;
+    }
+    my $new_perm = {};
+    if ($opt->{perm}){
+      foreach my $perm (@{$opt->{perm}}){
+        my ($key,$val) = split (/\s*=\s*/, $perm);
+        $new_perm->{$key} = $val;
+      }
+    }
+    if ($opt->{perm_user}){
+      foreach my $perm (@{$opt->{perm_user}}){
+        my ($key,$val) = split (/\s*=\s*/, $perm);
+        # Prevent the operating user to downgrade its own permissions
+        next if ($key eq $opt->{user});
+        $new_perm->{users}->{$key} = $val;
+      }
+    }
+    if ($opt->{perm_event}){
+      foreach my $perm (@{$opt->{perm_event}}){
+        my ($key,$val) = split (/\s*=\s*/, $perm);
+        $new_perm->{events}->{$key} = $val;
+      }
+    }
+    my $perm = merge($current_perm, $new_perm);
+    print to_json($perm, { pretty => 1 });
+    $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/state/m.room.power_levels?access_token=' . $opt->{access_token};
+    $resp = send_request({
+      method  => 'PUT',
+      uri     => $uri,
+      content => to_json($perm)
+    });
+    die "Error changing permissions for room $opt->{room}\n"
       unless ($resp->is_success);
   }
   # New invitees should be added

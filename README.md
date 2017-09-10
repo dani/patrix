@@ -12,6 +12,8 @@ It requires the following perl modules
   * URI::Escape
   * JSON
   * Term::ReadKey
+  * Hash::Merge::Simple
+  * Scalar::Util
 
 Here're the vailable options:
 
@@ -29,6 +31,10 @@ Here're the vailable options:
   * --topic: set the topic of a room. Valid for create-room and modify-room
   * --alias: set an alias for a room. Valid for create-room and modify-room
   * --join_rules: change joining rules. Can be either public (anyone can join the room) or invite (you must be invited to join the room)
+  * --perm: set power levels on the room. Can be specified several times. See examples
+  * --perm_user: set user levels on the room. Can be specified several times. See examples
+  * --perm_event: set power levels requires to send specific state events. Can be specified several times. See examples
+  * --perm_reset: the default behavior of the various --perm args is to add or override specific permissions without changing the others already existing permission. If this flag is set, the previous permissions will be removed, and the one specified with the --perm arg will be applied. The only exception is for user power levels which are at least as high as the operator (including the operator). These user power levels will be kept even is --perm-reset is set
   * --federation: Enable the federation when creating a room. Default is enabled. Can be turned of with --no-federation
   * --action: what to do. Valid actions are
     * send-msg (default): send the text message
@@ -53,18 +59,35 @@ Options given on the command line take precedence over the config file
 
 Examples:
 
+  * Send the content of /var/log/boot.log to a room (as text)
 ```
 cat /var/log/boot.log | patrix --room='#bootlogs:matrix.domain.com' --action=send-notice
 ```
+  * Send a file (here, the room name must be specified in the config file)
 ```
 patrix --action=send-file --file=/home/dani/archive.tgz --user=dani --password=secret --server=matrix.domain.com
 ```
+  * Send a simple text message, and enable debuging
 ```
 patrix --debug --message="Hello World"
 ```
+  * Create a new room, set its name and invite a Matrix user
 ```
 patrix --action=create-room --name="Human readable room name" --invite="@dani:matrix.example.com"
 ```
+  * Configure an existing room
 ```
 patrix --action=modify-room --join_rules=public --topic='New topic' --room='!uXfknaWNcAnvthnIms:matrix.example.com' --invite='@admin:matrix.example.com'
+```
+  * Change power level needed for the ban action. Set the default power levels of new users to 10. Set power level for @dani:matrix.example.com to 90
+```
+patrix --action=modify-room --perm "ban=70" --perm "users_default=10" --perm_user "@dani:matrix.example.com=90"
+```
+  * Set the required power level to send the m.room.name event to 80 (you can change the room name if you have a power level of at least 80)
+```
+patrix --action=modify-room --perm_event "m.room.name=80"
+```
+  * Reset permissions. Only keep user power levels which are at least the same as yours (including yours)
+```
+patrix --action=modify-room --perm_reset
 ```
