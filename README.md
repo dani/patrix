@@ -11,6 +11,7 @@ It requires the following perl modules
   * Getopt::Long
   * URI::Escape
   * JSON
+  * Term::ReadKey
 
 For now it's very limited, and can only send text messages and files to a room. Here're the vailable options:
 
@@ -27,6 +28,7 @@ For now it's very limited, and can only send text messages and files to a room. 
   * --name: set the name of a room. Valid for create-room and modify-room
   * --topic: set the topic of a room. Valid for create-room and modify-room
   * --alias: set an alias for a room. Valid for create-room and modify-room
+  * --join_rules: change joining rules. Can be either public (anyone can join the room) or invite (you must be invited to join the room)
   * --federation: Enable the federation when creating a room. Default is enabled. Can be turned of with --no-federation
   * --action: what to do. Valid actions are
     * send-msg (default): send the text message
@@ -34,7 +36,7 @@ For now it's very limited, and can only send text messages and files to a room. 
     * send-notice: send a notice. Very similar to send-msg but the client may display it differently. Eg Riot will not notify you for notices
     * send-file: send a binary file. --file must be set
     * create-room: create a new room
-    * modify-room: change an existing room (add an alias, set name, topic or invite)
+    * modify-room: change an existing room (add an alias, set name, topic, join_rules, invite)
     * get-access-token: just login and print the access token
     * get-room-list: prints the list of public rooms of this server
 

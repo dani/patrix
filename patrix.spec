@@ -19,6 +19,7 @@ Requires: perl(File::basename)
 Requires: perl(File::MimeInfo)
 Requires: perl(Path::Tiny)
 Requires: perl(URI::Escape)
+Requires: perl(Term::ReadKey)
 
 %description
 Patrix is a simple (and quite limited) client for the Matrix communication network
