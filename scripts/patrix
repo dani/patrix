@@ -252,6 +252,7 @@ sub modify_room {
   my ($uri,$req,$json,$resp);
   # A new alias should be added
   if ($opt->{alias}){
+    debug('Adding ' . $opt->{alias} . ' as a room alias');
     $uri = $opt->{server} . '/_matrix/client/r0/directory/room/' . uri_escape($opt->{alias}) . '?access_token=' . $opt->{access_token};
     $json = {
       room_id => $opt->{room}
@@ -266,6 +267,7 @@ sub modify_room {
   }
   # The name of the room is being updated
   if ($opt->{name}){
+    debug('Changing the room name to ' . $opt->{name});
     $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/state/m.room.name?access_token=' . $opt->{access_token};
     $json = {
       name => $opt->{name}
@@ -280,6 +282,7 @@ sub modify_room {
   }
   # The topic is being updated
   if ($opt->{topic}){
+    debug('Changing the room topic to ' . $opt->{topic});
     $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/state/m.room.topic?access_token=' . $opt->{access_token};
     $json = {
       topic => $opt->{topic}
@@ -294,6 +297,7 @@ sub modify_room {
   }
   # Changing joining rules
   if ($opt->{join_rules}){
+    debug('Changing the joining rules to '. $opt->{join_rules});
     $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/state/m.room.join_rules?access_token=' . $opt->{access_token};
     $json = {
       join_rules => $opt->{join_rules}
@@ -308,6 +312,7 @@ sub modify_room {
   }
   # New invitees should be added
   if ($opt->{invite}){
+    debug('Inviting ' . join(',', @{$opt->{invite}}) . ' to join the room');
     $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/invite?access_token=' . $opt->{access_token};
     foreach my $invite (@{$opt->{invite}}){
       $json = {
