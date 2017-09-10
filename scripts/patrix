@@ -13,6 +13,7 @@ use File::Basename;
 use URI::Escape;
 use Path::Tiny;
 use Term::ReadKey;
+use Data::Dumper;
 
 our $opt;
 
@@ -43,6 +44,8 @@ if ($opt->{conf} && -e $opt->{conf}){
   read_conf();
 }
 
+my $lwp = LWP::UserAgent->new;
+
 my $stdin = 0;
 if (!-t STDIN){
   debug("Reading data from stdin");
@@ -53,6 +56,7 @@ if (!-t STDIN){
 $opt->{server}     //= 'matrix.org';
 $opt->{action}     //= 'send-msg';
 $opt->{federation} //= 1;
+$opt->{server}     = 'https://' . $opt->{server} unless ($opt->{server} =~ m|https?://|);
 
 # Prompt to enter the password
 if (!$opt->{access_token} && $opt->{user} && !$opt->{password}){
@@ -62,6 +66,11 @@ if (!$opt->{access_token} && $opt->{user} && !$opt->{password}){
   $opt->{password} =~ s/\R\z//;
   ReadMode('restore');
   print "\n";
+}
+
+if ($opt->{room} && $opt->{room} =~ m/^#/){
+  $opt->{room} = room_alias_to_id($opt->{room});
+  debug('Room ID is ' . $opt->{room});
 }
 
 # Check we have all the options we need
@@ -84,14 +93,23 @@ if ($opt->{action} eq 'modify-room' && !$opt->{room}){
   die "You need to specify the room to modify\n\n";
 }
 
-$opt->{server} = 'https://' . $opt->{server} unless ($opt->{server} =~ m|https?://|);
-
-my $lwp = LWP::UserAgent->new;
-
 # Print debug info if debug is enabled
 sub debug {
   my $msg = shift;
   print "$msg\n\n" if $opt->{debug};
+}
+
+# Resolve a room alias to a room ID
+sub room_alias_to_id {
+  my $alias = shift;
+  debug("Looking $opt->{room} room ID");
+  my $uri = $opt->{server} . '/_matrix/client/r0/directory/room/' . uri_escape($alias);
+  my $resp = send_request({
+    method => 'GET',
+    uri    => $uri,
+  });
+  die "Error lokking up for the room ID\n" unless ($resp->is_success);
+  return from_json($resp->decoded_content)->{room_id};
 }
 
 # Send a request to Matrix server and return the raw response
@@ -158,10 +176,6 @@ sub join_room {
     uri => $uri
   });
   die "Error joining room $opt->{room}\n" unless ($resp->is_success);
-  # Resolve room -> room_id if joined by alias
-  my $room_id = from_json($resp->decoded_content)->{room_id};
-  # TODO: Provide a generic Alias -> ID resolver
-  $opt->{room} = $room_id if $room_id;
 }
 
 # Send a text message (either message or notice as both are similar)
@@ -360,6 +374,9 @@ if ($opt->{action} eq 'get-access-token'){
 }
 elsif ($opt->{action} eq 'get-room-list'){
   list_room();
+}
+elsif ($opt->{action} eq 'get-room-id'){
+  print room_alias_to_id($opt->{room}) . "\n";
 }
 elsif ($opt->{action} =~ m/send\-(msg|message|notice)/){
   join_room();
