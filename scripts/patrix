@@ -63,18 +63,6 @@ $opt->{action}     //= 'send-msg';
 $opt->{federation} //= 1;
 $opt->{server}     = 'https://' . $opt->{server} unless ($opt->{server} =~ m|https?://|);
 
-# No password on the command line or the conf file
-# And no access token
-# Prompt to type the password
-if (!$opt->{access_token} && $opt->{user} && !$opt->{password}){
-  ReadMode('noecho');
-  print "Password: ";
-  $opt->{password} = ReadLine(0);
-  $opt->{password} =~ s/\R\z//;
-  ReadMode('restore');
-  print "\n";
-}
-
 # If the given room starts with #, then it's an alias
 # Lets resolve this to the room ID
 if ($opt->{room} && $opt->{room} =~ m/^#/){
@@ -83,10 +71,10 @@ if ($opt->{room} && $opt->{room} =~ m/^#/){
 }
 
 # Check we have all the options we need
-if ($opt->{action} eq 'get-access-token' && (!$opt->{user} || !$opt->{password})){
-  die "You need to provide a valid user and password to get an access token\n\n";
+if (!$opt->{access_token} && !$opt->{user}){
+  die "You need to provide a valid user and password or a valid access_token\n\n";
 }
-elsif (!$opt->{access_token} && (!$opt->{user} || !$opt->{password})){
+elsif (!$opt->{access_token} && !$opt->{user}){
   die "Test: You need to provide either an access token or a valid user and password\n\n";
 }
 if ($opt->{action} eq 'send-msg' && (!$opt->{room} || (!$opt->{message} && !$stdin))){
@@ -463,6 +451,22 @@ sub del_room_alias {
     uri    => $uri
   });
   die "Error removing the alias\n" unless ($resp->is_success);
+}
+
+# If we ask for a new access token, then we must login, and ignore any
+# access_token from the config file
+$opt->{access_token} = undef if ($opt->{action} eq 'get-access-token');
+
+# No password on the command line or the conf file
+# And no access token
+# Prompt to type the password
+if (!$opt->{access_token} && $opt->{user} && !$opt->{password}){
+  ReadMode('noecho');
+  print "Password: ";
+  $opt->{password} = ReadLine(0);
+  $opt->{password} =~ s/\R\z//;
+  ReadMode('restore');
+  print "\n";
 }
 
 # Should we logout at the end ? Only if we used login and pass
