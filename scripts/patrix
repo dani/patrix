@@ -467,7 +467,7 @@ sub del_room_alias {
 
 # Should we logout at the end ? Only if we used login and pass
 # If we used an access_token, we don't want it to be invalidated
-my $must_logout = ($opt->{access_token}) ? 0 : 1;
+my $must_logout = ($opt->{access_token} || $opt->{action} eq 'get-access-token') ? 0 : 1;
 
 # If we don't have an access token, we must get one now
 if (!$opt->{access_token}){
