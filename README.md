@@ -3,6 +3,7 @@ patrix is a simple command line client for [Matrix](https://matrix.org) written 
 It requires the following perl modules
   * LWP::UserAgent
   * HTTP::Request
+  * LWP::Protocol::https
   * Config::Simple
   * File::HomeDir
   * File::Basename

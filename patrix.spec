@@ -10,6 +10,7 @@ Source0: %{name}-%{version}.tar.gz
 BuildArch: noarch
 
 Requires: perl(LWP::UserAgent)
+Requires: perl(LWP::Protocol::https)
 Requires: perl(Config::Simple)
 Requires: perl(HTTP::Request)
 Requires: perl(File::HomeDir)
