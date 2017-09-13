@@ -12,7 +12,6 @@ use File::MimeInfo;
 use File::Basename;
 use File::Spec;
 use URI::Escape;
-use Path::Tiny;
 use Term::ReadKey;
 use Hash::Merge::Simple qw(merge);
 use Scalar::Util qw(looks_like_number);
@@ -155,6 +154,16 @@ sub send_request {
   return $resp;
 }
 
+# Read the content of a file
+sub slurp {
+  my $file = shift;
+  open my $f, '<', $file or die;
+  local $/ = undef;
+  my $bytes = <$f>;
+  close $f;
+  return $bytes;
+}
+
 # Load values from the config file if it exists
 sub read_conf {
   my $cfg = Config::Simple->new;
@@ -256,7 +265,7 @@ sub send_file {
   my $resp = send_request({
     uri          => $uri,
     content_type => mimetype($file),
-    content      => path($file)->slurp_raw
+    content      => slurp($file)
   });
   debug("File upload response is\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
   die "Error uploading file\n" unless ($resp->is_success);

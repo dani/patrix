@@ -9,7 +9,6 @@ It requires the following perl modules
   * File::Basename
   * File::MimeInfo
   * File::Spec
-  * Path::Tiny
   * Getopt::Long
   * URI::Escape
   * JSON
