@@ -1,5 +1,6 @@
 * Purge history of a room
 * Purge history of all empty rooms (with no members)
+* Purge media cache
 * Modify federation setting of a room
 * Set room avatar
 * Configure user profile (name, avatar)
