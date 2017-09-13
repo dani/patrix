@@ -1,6 +1,6 @@
 Name: patrix
-Version: 0.1.1
-Release: 1%{?dist}
+Version: 0.1.2
+Release: 2%{?dist}
 Summary: Command line client for Matrix
 
 Group: Applications/Internet
@@ -16,7 +16,7 @@ Requires: perl(HTTP::Request)
 Requires: perl(File::HomeDir)
 Requires: perl(Getopt::Long)
 Requires: perl(JSON)
-Requires: perl(File::basename)
+Requires: perl(File::Basename)
 Requires: perl(File::MimeInfo)
 Requires: perl(Path::Tiny)
 Requires: perl(URI::Escape)
@@ -52,6 +52,12 @@ room via the command line.
 %{_bindir}/patrix
 
 %changelog
+* Wed Sep 13 2017 Daniel Berteaud <daniel@firewall-services.com> - 0.1.2-2
+- Fix perl dependency in spec file
+
+* Tue Sep 12 2017 Daniel Berteaud <daniel@firewall-services.com> - 0.1.2-1
+- New release
+
 * Fri Sep 8 2017 Daniel Berteaud <daniel@firewall-services.com> - 0.1.1-1
 - New release
 
