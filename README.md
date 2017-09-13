@@ -21,22 +21,21 @@ Here're the vailable options:
   * --user: specify the user you want to login as
   * --password: the password to auth against the HS
   * --server: the HS you want to connect to. Default is https://matrix.org
-  * --access_token: can be used instead of --user and --password
+  * --access-token: can be used instead of --user and --password. Use --get-access-token to get one first for example.
   * --room: the room to which the message must be sent. Can be a room ID or a room alias
   * --message: the text message you want to send. If you send something on stdin, it's assumed to be the text to send and this option is ignored
   * --debug: if present, will be verbose
-  * --conf: path to a conf file. Default conf file is ~/.patrixrc
+  * --config: path to a conf file. Default conf file is ~/.patrixrc
   * --file: if action is send-file, specify the path of the file to send. You can send several files at once by using multiple --file args
   * --invite: a matrix ID (@user:server.domain.tld) to invite in a room. Can be specified several times. Valid for create-room and modify-room
   * --name: set the name of a room. Valid for create-room and modify-room
   * --topic: set the topic of a room. Valid for create-room and modify-room
   * --alias: set an alias for a room. Valid for create-room and modify-room
-  * --join_rules: change joining rules. Can be either public (anyone can join the room) or invite (you must be invited to join the room)
+  * --join-rules: change joining rules. Can be either public (anyone can join the room) or invite (you must be invited to join the room)
   * --perm: set power levels on the room. Can be specified several times. See examples
-  * --perm_user: set user levels on the room. Can be specified several times. See examples
-  * --perm_event: set power levels requires to send specific state events. Can be specified several times. See examples
-  * --perm_reset: the default behavior of the various --perm args is to add or override specific permissions without changing the others already existing permission. If this flag is set, the previous permissions will be removed, and the one specified with the --perm arg will be applied. The only exception is for user power levels which are at least as high as the operator (including the operator). These user power levels will be kept even is --perm-reset is set
-  * --federation: Enable the federation when creating a room. Default is enabled. Can be turned of with --no-federation
+  * --user-perm: set user levels on the room. Can be specified several times. See examples
+  * --event-perm: set power levels requires to send specific state events. Can be specified several times. See examples
+  * --reset-perm: the default behavior of the various --perm args is to add or override specific permissions without changing the others already existing permissions. If this flag is set, the previous permissions will be removed, and the one specified with the --perm arg will be applied. The only exception is for user power levels which are at least as high as the operator (including the operator). These user power levels will be kept even is --reset-perm is set
   * --action: what to do. Valid actions are
     * send-msg (default): send the text message
     * send-message: an alias for send-msg
