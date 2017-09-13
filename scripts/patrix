@@ -26,7 +26,7 @@ GetOptions(
   "server=s"          => \$opt->{server},
   "room=s"            => \$opt->{room},
   "message=s"         => \$opt->{message},
-  "files=s"           => \$opt->{file},
+  "files=s@"          => \$opt->{file},
   "debug"             => \$opt->{debug},
   "action=s"          => \$opt->{action},
   "send-msg"          => \$opt->{'send-msg'},
@@ -89,10 +89,12 @@ if ($opt->{room} && $opt->{room} =~ m/^#/){
   debug('Room ID is ' . $opt->{room});
 }
 
-# Handle ~
-$opt->{file} =~ s/^~(\w*)/(getpwnam( $1 || $ENV{USER}))[7]/e;
-# Convert to absolute path
-$opt->{file} = File::Spec->rel2abs($opt->{file});
+foreach (@{$opt->{file}}){
+  # Handle ~
+  $_ =~ s/^~(\w*)/(getpwnam( $1 || $ENV{USER}))[7]/e;
+  # Convert to absolute path
+  $_ = File::Spec->rel2abs($_);
+}
 
 # Check we have all the options we need
 if (!$opt->{access_token} && !$opt->{user}){
@@ -107,8 +109,10 @@ if ($opt->{action} eq 'send-msg' && (!$opt->{room} || (!$opt->{message} && !$std
 if ($opt->{action} eq 'send-file' && (!$opt->{room} || !$opt->{file})){
   die "You need to provide a room ID and a file to send\n\n";
 }
-if ($opt->{action} eq 'send-file' && $opt->{file} && !-e $opt->{file}){
-  die "File $opt->{file} not found\n\n";
+if ($opt->{action} eq 'send-file' && $opt->{file}){
+  foreach (@{$opt->{file}}){
+    die "File $_ not found\n\n" unless (-e $_);
+  }
 }
 if ($opt->{action} eq 'modify-room' && !$opt->{room}){
   die "You need to specify the room to modify\n\n";
@@ -244,14 +248,15 @@ sub send_msg {
 
 # Send a file to the room
 sub send_file {
+  my $file = shift;
   # Sending a file is a 2 steps operation. First we need to upload the file to the media store
   # And then we post the uri on the room
-  debug("Uploading file $opt->{file} to the media store");
-  my $uri = $opt->{server} . '/_matrix/media/v1/upload?access_token=' . $opt->{access_token} . '&filename=' . basename($opt->{file});
+  debug("Uploading file $file to the media store");
+  my $uri = $opt->{server} . '/_matrix/media/v1/upload?access_token=' . $opt->{access_token} . '&filename=' . basename($file);
   my $resp = send_request({
     uri          => $uri,
-    content_type => mimetype($opt->{file}),
-    content      => path($opt->{file})->slurp_raw
+    content_type => mimetype($file),
+    content      => path($file)->slurp_raw
   });
   debug("File upload response is\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
   die "Error uploading file\n" unless ($resp->is_success);
@@ -264,11 +269,11 @@ sub send_file {
   $uri = $opt->{server} . '/_matrix/client/r0/rooms/' . $opt->{room} . '/send/m.room.message?access_token=' . $opt->{access_token};
   my $json = {
     msgtype  => 'm.file',
-    body     => basename($opt->{file}),
-    filename => basename($opt->{file}),
+    body     => basename($file),
+    filename => basename($file),
     info     => {
-      mimetype => mimetype $opt->{file},
-      size     => (stat $opt->{file})[7]
+      mimetype => mimetype $file,
+      size     => (stat $file)[7]
     },
     url      => $file_uri
   };
@@ -516,7 +521,7 @@ elsif ($opt->{action} =~ m/^send\-(msg|message|notice)$/){
 }
 elsif ($opt->{action} eq 'send-file'){
   join_room();
-  send_file();
+  send_file($_) foreach (@{$opt->{file}});
 }
 elsif ($opt->{action} eq 'create-room'){
   create_room();

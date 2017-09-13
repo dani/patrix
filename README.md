@@ -27,7 +27,7 @@ Here're the vailable options:
   * --message: the text message you want to send. If you send something on stdin, it's assumed to be the text to send and this option is ignored
   * --debug: if present, will be verbose
   * --conf: path to a conf file. Default conf file is ~/.patrixrc
-  * --file: if action is send-file, specify the path of the file to send
+  * --file: if action is send-file, specify the path of the file to send. You can send several files at once by using multiple --file args
   * --invite: a matrix ID (@user:server.domain.tld) to invite in a room. Can be specified several times. Valid for create-room and modify-room
   * --name: set the name of a room. Valid for create-room and modify-room
   * --topic: set the topic of a room. Valid for create-room and modify-room
