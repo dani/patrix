@@ -1,7 +1,6 @@
 * Purge history of a room
 * Purge history of all empty rooms (with no members)
 * Modify federation setting of a room
-* Send image
 * Set room avatar
 * Configure user profile (name, avatar)
 * Follow discussion of a room (like a tail -f of the room discussion)

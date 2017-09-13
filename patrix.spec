@@ -1,6 +1,6 @@
 Name: patrix
-Version: 0.1.2
-Release: 2%{?dist}
+Version: 0.1.3
+Release: 1%{?dist}
 Summary: Command line client for Matrix
 
 Group: Applications/Internet
@@ -23,6 +23,7 @@ Requires: perl(URI::Escape)
 Requires: perl(Term::ReadKey)
 Requires: perl(Hash::Merge::Simple)
 Requires: perl(Scalar::Util)
+Requires: perl(Image::Size)
 
 %description
 Patrix is a simple (and quite limited) client for the Matrix communication network
@@ -52,6 +53,9 @@ room via the command line.
 %{_bindir}/patrix
 
 %changelog
+* Wed Sep 13 2017 Daniel Berteaud <daniel@firewall-services.com> - 0.1.3-1
+- New release
+
 * Wed Sep 13 2017 Daniel Berteaud <daniel@firewall-services.com> - 0.1.2-2
 - Fix perl dependency in spec file
 

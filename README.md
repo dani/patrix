@@ -15,6 +15,7 @@ It requires the following perl modules
   * Term::ReadKey
   * Hash::Merge::Simple
   * Scalar::Util
+  * Image::Size
 
 Here're the vailable options:
 

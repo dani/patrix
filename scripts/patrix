@@ -15,6 +15,7 @@ use URI::Escape;
 use Term::ReadKey;
 use Hash::Merge::Simple qw(merge);
 use Scalar::Util qw(looks_like_number);
+use Image::Size;
 
 our $opt;
 
@@ -262,9 +263,10 @@ sub send_file {
   # And then we post the uri on the room
   debug("Uploading file $file to the media store");
   my $uri = $opt->{server} . '/_matrix/media/v1/upload?access_token=' . $opt->{access_token} . '&filename=' . basename($file);
+  my $mime = mimetype($file);
   my $resp = send_request({
     uri          => $uri,
-    content_type => mimetype($file),
+    content_type => $mime,
     content      => slurp($file)
   });
   debug("File upload response is\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
@@ -286,6 +288,13 @@ sub send_file {
     },
     url      => $file_uri
   };
+  if ($mime =~ m/^image/){
+    # The file is an image, change the message type and add the required info so it is
+    # displayed as an image
+    my ($w,$h) = imgsize($file);
+    $json->{msgtype} = 'm.image';
+    ($json->{info}->{h}, $json->{info}->{w}) = imgsize($file);
+  }
   $resp = send_request({
     uri     => $uri,
     content => to_json($json)
