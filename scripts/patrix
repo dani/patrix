@@ -43,7 +43,6 @@ GetOptions(
   "alias=s"           => \$opt->{alias},
   "topic=s"           => \$opt->{topic},
   "join_rules=s"      => \$opt->{join_rules},
-  "federation!"       => \$opt->{federation},
   "perm=s@"           => \$opt->{perm},
   "perm_user=s@"      => \$opt->{perm_user},
   "perm_event=s@"     => \$opt->{perm_user},
@@ -327,18 +326,15 @@ sub create_room {
   debug("Creating a new room on $opt->{server}");
   my $uri = $opt->{server} . '/_matrix/client/r0/createRoom?access_token=' . $opt->{access_token};
   my $json = {};
-  $json->{room_alias_name} = $opt->{alias}      if $opt->{alias};
-  $json->{topic}           = $opt->{topic}      if $opt->{topic};
-  $json->{name}            = $opt->{name}       if $opt->{name};
-  $json->{invite}          = $opt->{invite}     if $opt->{invite};
-  $json->{creation_content}->{'m.federate'} = $opt->{federation};
   my $resp = send_request({
     uri => $uri,
     content => to_json($json)
   });
   die "Error creating room on $opt->{server}\n" unless ($resp->is_success);
-  my $room_id = from_json($resp->decoded_content)->{room_id};
-  print "$room_id\n";
+  $opt->{room} = from_json($resp->decoded_content)->{room_id};
+  # Now configure the room
+  modify_room();
+  print "$opt->{room}\n";
 }
 
 # Modify an existing room
