@@ -8,6 +8,7 @@ It requires the following perl modules
   * File::HomeDir
   * File::Basename
   * File::MimeInfo
+  * File::Spec
   * Path::Tiny
   * Getopt::Long
   * URI::Escape

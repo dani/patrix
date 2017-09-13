@@ -10,6 +10,7 @@ use Config::Simple;
 use File::HomeDir;
 use File::MimeInfo;
 use File::Basename;
+use File::Spec;
 use URI::Escape;
 use Path::Tiny;
 use Term::ReadKey;
@@ -241,11 +242,12 @@ sub send_file {
   # Sending a file is a 2 steps operation. First we need to upload the file to the media store
   # And then we post the uri on the room
   debug("Uploading file $opt->{file} to the media store");
+  $opt->{file} = File::Spec->rel2abs($opt->{file});
   my $uri = $opt->{server} . '/_matrix/media/v1/upload?access_token=' . $opt->{access_token} . '&filename=' . basename($opt->{file});
   my $resp = send_request({
     uri          => $uri,
-    content_type => mimetype $opt->{file},
-    content      => path( $opt->{file} )->slurp_raw
+    content_type => mimetype($opt->{file}),
+    content      => path($opt->{file})->slurp_raw
   });
   debug("File upload response is\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
   die "Error uploading file\n" unless ($resp->is_success);
