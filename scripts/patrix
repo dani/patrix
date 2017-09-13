@@ -15,7 +15,6 @@ use URI::Escape;
 use Term::ReadKey;
 use Hash::Merge::Simple qw(merge);
 use Scalar::Util qw(looks_like_number);
-use Image::Size;
 
 our $opt;
 
@@ -269,7 +268,6 @@ sub send_file {
     content_type => $mime,
     content      => slurp($file)
   });
-  debug("File upload response is\n" . to_json(from_json($resp->decoded_content), { pretty => 1 }));
   die "Error uploading file\n" unless ($resp->is_success);
   # If everything went well, the server replied with the URI of our file, which we can
   # now post on the room
@@ -288,12 +286,15 @@ sub send_file {
     },
     url      => $file_uri
   };
+  # If the file is an image, audio or video, send it as such
   if ($mime =~ m/^image/){
-    # The file is an image, change the message type and add the required info so it is
-    # displayed as an image
-    my ($w,$h) = imgsize($file);
     $json->{msgtype} = 'm.image';
-    ($json->{info}->{h}, $json->{info}->{w}) = imgsize($file);
+  }
+  elsif ($mime =~ /^audio/){
+    $json->{msgtype} = 'm.audio';
+  }
+  elsif ($mime =~ /^video/){
+    $json->{msgtype} = 'm.video';
   }
   $resp = send_request({
     uri     => $uri,
