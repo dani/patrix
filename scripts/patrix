@@ -89,6 +89,11 @@ if ($opt->{room} && $opt->{room} =~ m/^#/){
   debug('Room ID is ' . $opt->{room});
 }
 
+# Handle ~
+$opt->{file} =~ s/^~(\w*)/(getpwnam( $1 || $ENV{USER}))[7]/e;
+# Convert to absolute path
+$opt->{file} = File::Spec->rel2abs($opt->{file});
+
 # Check we have all the options we need
 if (!$opt->{access_token} && !$opt->{user}){
   die "You need to provide a valid user and password or a valid access_token\n\n";
@@ -242,7 +247,6 @@ sub send_file {
   # Sending a file is a 2 steps operation. First we need to upload the file to the media store
   # And then we post the uri on the room
   debug("Uploading file $opt->{file} to the media store");
-  $opt->{file} = File::Spec->rel2abs($opt->{file});
   my $uri = $opt->{server} . '/_matrix/media/v1/upload?access_token=' . $opt->{access_token} . '&filename=' . basename($opt->{file});
   my $resp = send_request({
     uri          => $uri,
