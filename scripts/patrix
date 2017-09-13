@@ -19,26 +19,35 @@ use Scalar::Util qw(looks_like_number);
 our $opt;
 
 GetOptions(
-  "user=s"           => \$opt->{user},
-  "password=s"       => \$opt->{password},
-  "access_token=s"   => \$opt->{access_token},
-  "server=s"         => \$opt->{server},
-  "room=s"           => \$opt->{room},
-  "message=s"        => \$opt->{message},
-  "files=s"          => \$opt->{file},
-  "debug"            => \$opt->{debug},
-  "action=s"         => \$opt->{action},
-  "conf=s"           => \$opt->{conf},
-  "invite=s@"        => \$opt->{invite},
-  "name=s"           => \$opt->{name},
-  "alias=s"          => \$opt->{alias},
-  "topic=s"          => \$opt->{topic},
-  "join_rules=s"     => \$opt->{join_rules},
-  "federation!"      => \$opt->{federation},
-  "perm=s@"          => \$opt->{perm},
-  "perm_user=s@"     => \$opt->{perm_user},
-  "perm_event=s@"    => \$opt->{perm_user},
-  "perm_reset"       => \$opt->{perm_reset}
+  "user=s"            => \$opt->{user},
+  "password=s"        => \$opt->{password},
+  "access_token=s"    => \$opt->{access_token},
+  "server=s"          => \$opt->{server},
+  "room=s"            => \$opt->{room},
+  "message=s"         => \$opt->{message},
+  "files=s"           => \$opt->{file},
+  "debug"             => \$opt->{debug},
+  "action=s"          => \$opt->{action},
+  "send-msg"          => \$opt->{'send-msg'},
+  "send-notice"       => \$opt->{'send-notice'},
+  "send-file"         => \$opt->{'send-file'},
+  "create-room"       => \$opt->{'create-room'},
+  "modify-room"       => \$opt->{'modify-room'},
+  "delete-room-alias" => \$opt->{'delete-room-alias'},
+  "get-access-token"  => \$opt->{'get-access-token'},
+  "get-room-list"     => \$opt->{'get-room-list'},
+  "get-room-id"       => \$opt->{'get-room-id'},
+  "conf=s"            => \$opt->{conf},
+  "invite=s@"         => \$opt->{invite},
+  "name=s"            => \$opt->{name},
+  "alias=s"           => \$opt->{alias},
+  "topic=s"           => \$opt->{topic},
+  "join_rules=s"      => \$opt->{join_rules},
+  "federation!"       => \$opt->{federation},
+  "perm=s@"           => \$opt->{perm},
+  "perm_user=s@"      => \$opt->{perm_user},
+  "perm_event=s@"     => \$opt->{perm_user},
+  "perm_reset"        => \$opt->{perm_reset}
 );
 
 if (-e File::HomeDir->my_home . "/.patrixrc" && !$opt->{conf}){
@@ -47,6 +56,15 @@ if (-e File::HomeDir->my_home . "/.patrixrc" && !$opt->{conf}){
 }
 if ($opt->{conf} && -e $opt->{conf}){
   read_conf();
+}
+
+# alias for --action=foo is --foo
+foreach my $action (qw(send-msg send-notice send-file create-room modify-room
+                       delete-room-alias get-access-token get-room-list get-room-id)){
+  if ($opt->{$action}){
+    $opt->{action} = $action;
+    last;
+  }
 }
 
 my $lwp = LWP::UserAgent->new;
