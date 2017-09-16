@@ -62,11 +62,11 @@ Examples:
 
   * Send the content of /var/log/boot.log to a room (as text)
 ```
-cat /var/log/boot.log | patrix --room='#bootlogs:matrix.domain.com' --action=send-notice
+cat /var/log/boot.log | patrix --room='#bootlogs:matrix.domain.com' --send-notice
 ```
   * Send a file (here, the room name must be specified in the config file)
 ```
-patrix --action=send-file --file=/home/dani/archive.tgz --user=dani --password=secret --server=matrix.domain.com
+patrix --send-file --file=/home/dani/archive.tgz --user=dani --password=secret --server=matrix.domain.com
 ```
   * Send a simple text message, and enable debuging
 ```
@@ -74,21 +74,21 @@ patrix --debug --message="Hello World"
 ```
   * Create a new room, set its name and invite a Matrix user
 ```
-patrix --action=create-room --name="Human readable room name" --invite="@dani:matrix.example.com"
+patrix --create-room --name="Human readable room name" --invite="@dani:matrix.example.com"
 ```
   * Configure an existing room
 ```
-patrix --action=modify-room --join_rules=public --topic='New topic' --room='!uXfknaWNcAnvthnIms:matrix.example.com' --invite='@admin:matrix.example.com'
+patrix --modify-room --join-rules=public --topic='New topic' --room='!uXfknaWNcAnvthnIms:matrix.example.com' --invite='@admin:matrix.example.com'
 ```
   * Change power level needed for the ban action. Set the default power levels of new users to 10. Set power level for @dani:matrix.example.com to 90
 ```
-patrix --action=modify-room --perm "ban=70" --perm "users_default=10" --perm_user "@dani:matrix.example.com=90"
+patrix -modify-room --perm "ban=70" --perm "users_default=10" --user-perm "@dani:matrix.example.com=90"
 ```
   * Set the required power level to send the m.room.name event to 80 (you can change the room name if you have a power level of at least 80)
 ```
-patrix --action=modify-room --perm_event "m.room.name=80"
+patrix --modify-room --event-perm "m.room.name=80"
 ```
   * Reset permissions. Only keep user power levels which are at least the same as yours (including yours)
 ```
-patrix --action=modify-room --perm_reset
+patrix --modify-room --reset-perm
 ```
