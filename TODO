@@ -6,3 +6,4 @@
 * Configure user profile (name, avatar)
 * Follow discussion of a room (like a tail -f of the room discussion)
 * Ban / Kick users
+* Add --setup to create ~/.patrixrc
