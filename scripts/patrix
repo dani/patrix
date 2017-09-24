@@ -496,11 +496,13 @@ sub del_room_alias {
 
 # Write settings in a config file
 sub setup {
-  my $cfg = Config::Simple->new($opt->{conf});
+  $opt->{conf} //= File::HomeDir->my_home . "/.patrixrc";
+  my $cfg = Config::Simple->new(syntax => 'ini');
   foreach my $param (qw(access_token server room)){
     $cfg->param($param, $opt->{$param}) if ($opt->{$param});
   }
-  $cfg->save;
+  debug("Writing config file $opt->{conf}");
+  $cfg->save($opt->{conf});
 }
 
 # If we ask for a new access token, then we must login, and ignore any
@@ -537,7 +539,8 @@ set_defaults();
 
 # Should we logout at the end ? Only if we used login and pass
 # If we used an access_token, we don't want it to be invalidated
-my $must_logout = ($opt->{access_token} || $opt->{action} eq 'get-access-token') ? 0 : 1;
+my $must_logout = ($opt->{access_token} || ($opt->{action} eq 'get-access-token' ||
+                                            $opt->{action} eq 'setup')) ? 0 : 1;
 
 # If we don't have an access token, we must get one now
 if (!$opt->{access_token}){
