@@ -226,6 +226,7 @@ sub who_am_i {
   # Lets just build it manually for now
   my $server = $opt->{server};
   $server =~ s|^https?://||;
+  $server =~ s|/$||;
   return '@' . $opt->{user} .':' . $server;
 }
 
