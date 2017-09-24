@@ -110,7 +110,6 @@ if ($opt->{action} =~ m/^(remove|delete|del)\-room\-alias$/ and !$opt->{alias}){
 # Set defaults
 sub set_defaults {
   $opt->{action}     //= 'send-msg';
-  $opt->{federation} //= 1;
   $opt->{server}     = 'https://' . $opt->{server} unless ($opt->{server} =~ m|https?://|);
 }
 
