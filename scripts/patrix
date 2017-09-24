@@ -74,12 +74,6 @@ if (!-t STDIN){
   $stdin = 1;
 }
 
-# Set defaults
-$opt->{server}     //= 'matrix.org';
-$opt->{action}     //= 'send-msg';
-$opt->{federation} //= 1;
-$opt->{server}     = 'https://' . $opt->{server} unless ($opt->{server} =~ m|https?://|);
-
 # If the given room starts with #, then it's an alias
 # Lets resolve this to the room ID
 if ($opt->{room} && $opt->{room} =~ m/^#/){
@@ -95,12 +89,6 @@ foreach (@{$opt->{file}}){
 }
 
 # Check we have all the options we need
-if (!$opt->{access_token} && !$opt->{user}){
-  die "You need to provide a valid user and password or a valid access_token\n\n";
-}
-elsif (!$opt->{access_token} && !$opt->{user}){
-  die "Test: You need to provide either an access token or a valid user and password\n\n";
-}
 if ($opt->{action} eq 'send-msg' && (!$opt->{room} || (!$opt->{message} && !$stdin))){
   die "You need to provide a room ID and a message\n\n";
 }
@@ -117,6 +105,13 @@ if ($opt->{action} eq 'modify-room' && !$opt->{room}){
 }
 if ($opt->{action} =~ m/^(remove|delete|del)\-room\-alias$/ and !$opt->{alias}){
   die "You must specify the alias to remove\n\n";
+}
+
+# Set defaults
+sub set_defaults {
+  $opt->{action}     //= 'send-msg';
+  $opt->{federation} //= 1;
+  $opt->{server}     = 'https://' . $opt->{server} unless ($opt->{server} =~ m|https?://|);
 }
 
 # Print debug info if debug is enabled
@@ -501,17 +496,33 @@ sub del_room_alias {
 # access_token from the config file
 $opt->{access_token} = undef if ($opt->{action} eq 'get-access-token');
 
-# No password on the command line or the conf file
-# And no access token
-# Prompt to type the password
-if (!$opt->{access_token} && $opt->{user} && !$opt->{password}){
-  ReadMode('noecho');
-  print "Password: ";
-  $opt->{password} = ReadLine(0);
-  $opt->{password} =~ s/\R\z//;
-  ReadMode('restore');
-  print "\n";
+# If server is not specified, ask for it
+if (!$opt->{server}){
+  print "Matrix server: ";
+  $opt->{server} = ReadLine(0);
+  $opt->{server} =~ s/\R\z//;
 }
+# If not using an access token
+# Prompt for the user ID and password
+# if not provided on the command line or the config file
+if (!$opt->{access_token}){
+  if (!$opt->{user}){
+    print "Matrix ID: ";
+    $opt->{user} = ReadLine(0);
+    $opt->{user} =~ s/\R\z//;
+  }
+  if (!$opt->{password}){
+    ReadMode('noecho');
+    print "Password: ";
+    $opt->{password} = ReadLine(0);
+    $opt->{password} =~ s/\R\z//;
+    ReadMode('restore');
+    print "\n";
+  }
+}
+
+# Set defaults values
+set_defaults();
 
 # Should we logout at the end ? Only if we used login and pass
 # If we used an access_token, we don't want it to be invalidated
