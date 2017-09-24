@@ -37,6 +37,7 @@ GetOptions(
   "get-access-token"                   => \$opt->{'get-access-token'},
   "get-room-list"                      => \$opt->{'get-room-list'},
   "get-room-id"                        => \$opt->{'get-room-id'},
+  "setup"                              => \$opt->{setup},
   "config=s"                           => \$opt->{conf},
   "invite=s@"                          => \$opt->{invite},
   "name=s"                             => \$opt->{name},
@@ -59,7 +60,8 @@ if ($opt->{conf} && -e $opt->{conf}){
 
 # alias for --action=foo is --foo
 foreach my $action (qw(send-msg send-notice send-file create-room modify-room
-                       delete-room-alias get-access-token get-room-list get-room-id)){
+                       delete-room-alias get-access-token get-room-list get-room-id
+                       setup)){
   if ($opt->{$action}){
     $opt->{action} = $action;
     last;
@@ -492,6 +494,15 @@ sub del_room_alias {
   die "Error removing the alias\n" unless ($resp->is_success);
 }
 
+# Write settings in a config file
+sub setup {
+  my $cfg = Config::Simple->new($opt->{conf});
+  foreach my $param (qw(access_token server room)){
+    $cfg->param($param, $opt->{$param}) if ($opt->{$param});
+  }
+  $cfg->save;
+}
+
 # If we ask for a new access token, then we must login, and ignore any
 # access_token from the config file
 $opt->{access_token} = undef if ($opt->{action} eq 'get-access-token');
@@ -531,6 +542,9 @@ my $must_logout = ($opt->{access_token} || $opt->{action} eq 'get-access-token')
 # If we don't have an access token, we must get one now
 if (!$opt->{access_token}){
   login();
+}
+if ($opt->{action} eq 'setup'){
+  setup();
 }
 if ($opt->{action} eq 'get-access-token'){
   print $opt->{access_token} . "\n";
