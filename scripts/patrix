@@ -90,25 +90,6 @@ foreach (@{$opt->{file}}){
   $_ = File::Spec->rel2abs($_);
 }
 
-# Check we have all the options we need
-if ($opt->{action} eq 'send-msg' && (!$opt->{room} || (!$opt->{message} && !$stdin))){
-  die "You need to provide a room ID and a message\n\n";
-}
-if ($opt->{action} eq 'send-file' && (!$opt->{room} || !$opt->{file})){
-  die "You need to provide a room ID and a file to send\n\n";
-}
-if ($opt->{action} eq 'send-file' && $opt->{file}){
-  foreach (@{$opt->{file}}){
-    die "File $_ not found\n\n" unless (-e $_);
-  }
-}
-if ($opt->{action} eq 'modify-room' && !$opt->{room}){
-  die "You need to specify the room to modify\n\n";
-}
-if ($opt->{action} =~ m/^(remove|delete|del)\-room\-alias$/ and !$opt->{alias}){
-  die "You must specify the alias to remove\n\n";
-}
-
 # Set defaults
 sub set_defaults {
   $opt->{action}     //= 'send-msg';
@@ -505,10 +486,6 @@ sub setup {
   $cfg->save($opt->{conf});
 }
 
-# If we ask for a new access token, then we must login, and ignore any
-# access_token from the config file
-$opt->{access_token} = undef if ($opt->{action} eq 'get-access-token');
-
 # If server is not specified, ask for it
 if (!$opt->{server}){
   print "Matrix server: ";
@@ -536,6 +513,10 @@ if (!$opt->{access_token}){
 
 # Set defaults values
 set_defaults();
+
+# If we ask for a new access token, then we must login, and ignore any
+# access_token from the config file
+$opt->{access_token} = undef if ($opt->{action} eq 'get-access-token');
 
 # Should we logout at the end ? Only if we used login and pass
 # If we used an access_token, we don't want it to be invalidated
