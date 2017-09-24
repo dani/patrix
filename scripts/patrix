@@ -134,7 +134,7 @@ sub room_alias_to_id {
     method => 'GET',
     uri    => $uri,
   });
-  die "Error lokking up for the room ID\n" unless ($resp->is_success);
+  die "Error during room ID lookup\n" unless ($resp->is_success);
   return from_json($resp->decoded_content)->{room_id};
 }
 
