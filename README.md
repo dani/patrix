@@ -37,6 +37,7 @@ Here're the vailable options:
   * --event-perm: set power levels requires to send specific state events. Can be specified several times. See examples
   * --reset-perm: the default behavior of the various --perm args is to add or override specific permissions without changing the others already existing permissions. If this flag is set, the previous permissions will be removed, and the one specified with the --perm arg will be applied. The only exception is for user power levels which are at least as high as the operator (including the operator). These user power levels will be kept even is --reset-perm is set
   * --action: what to do. Valid actions are
+    * setup: write a config file
     * send-msg (default): send the text message
     * send-message: an alias for send-msg
     * send-notice: send a notice. Very similar to send-msg but the client may display it differently. Eg Riot will not notify you for notices
@@ -47,6 +48,8 @@ Here're the vailable options:
     * get-access-token: just login and print the access token
     * get-room-list: prints the list of public rooms of this server
     * get-room-id: resolve a room alias to its ID
+
+All the actions can be specified either with --action=foo or as --fo (eg --action=send-file is equivalent to --send-file)
 
 All the available options can be set a the configuration file using a simple ini style format, eg
 
