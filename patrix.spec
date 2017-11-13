@@ -48,7 +48,7 @@ room via the command line.
 
 %files
 %defattr(-,root,root,-)
-%doc README.md TODO CHANGELOG.git
+%doc README.md TODO
 %{_bindir}/patrix
 
 %changelog
