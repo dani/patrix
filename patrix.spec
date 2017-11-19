@@ -1,5 +1,5 @@
 Name: patrix
-Version: 0.1.5
+Version: 0.1.6
 Release: 1%{?dist}
 Summary: Command line client for Matrix
 
@@ -52,6 +52,9 @@ room via the command line.
 %{_bindir}/patrix
 
 %changelog
+* Sun Nov 19 2017 Daniel Berteaud <daniel@firewall-services.com> 0.1.6-1
+- Define actions array before the loop (daniel@firewall-services.com)
+
 * Tue Nov 14 2017 Daniel Berteaud <daniel@firewall-services.com> 0.1.5-1
 - Remove now non existing CHANGELOG.git (daniel@firewall-services.com)
 - Fix tito releasers.conf path (daniel@firewall-services.com)
