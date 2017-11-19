@@ -59,9 +59,19 @@ if ($opt->{conf} && -e $opt->{conf}){
 }
 
 # alias for --action=foo is --foo
-foreach my $action (qw(send-msg send-notice send-file create-room modify-room
-                       delete-room-alias get-access-token get-room-list get-room-id
-                       setup)){
+my @actions = qw(
+  send-msg
+  send-notice
+  send-file
+  create-room
+  modify-room
+  delete-room-alias
+  get-access-token
+  get-room-list
+  get-room-id
+  setup
+);
+foreach my $action (@actions){
   if ($opt->{$action}){
     $opt->{action} = $action;
     last;
