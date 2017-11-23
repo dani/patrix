@@ -547,7 +547,7 @@ elsif ($opt->{action} eq 'get-room-list'){
   list_room();
 }
 elsif ($opt->{action} eq 'get-room-id'){
-  print room_alias_to_id($opt->{room}) . "\n";
+  print $opt->{room} . "\n";
 }
 elsif ($opt->{action} =~ m/^send\-(msg|message|notice)$/){
   join_room();
