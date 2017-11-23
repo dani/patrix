@@ -86,13 +86,6 @@ if (!-t STDIN){
   $stdin = 1;
 }
 
-# If the given room starts with #, then it's an alias
-# Lets resolve this to the room ID
-if ($opt->{room} && $opt->{room} =~ m/^#/){
-  $opt->{room} = room_alias_to_id($opt->{room});
-  debug('Room ID is ' . $opt->{room});
-}
-
 foreach (@{$opt->{file}}){
   # Handle ~
   $_ =~ s/^~(\w*)/(getpwnam( $1 || $ENV{USER}))[7]/e;
@@ -523,6 +516,13 @@ if (!$opt->{access_token}){
 
 # Set defaults values
 set_defaults();
+
+# If the given room starts with #, then it's an alias
+# Lets resolve this to the room ID
+if ($opt->{room} && $opt->{room} =~ m/^#/){
+  $opt->{room} = room_alias_to_id($opt->{room});
+  debug('Room ID is ' . $opt->{room});
+}
 
 # If we ask for a new access token, then we must login, and ignore any
 # access_token from the config file
