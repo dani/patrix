@@ -41,6 +41,7 @@ Here're the vailable options:
     * send-msg (default): send the text message
     * send-message: an alias for send-msg
     * send-notice: send a notice. Very similar to send-msg but the client may display it differently. Eg Riot will not notify you for notices
+    * send-code: same as send-msg, but text will be presented like code (<pre><code>text</code></pre>)
     * send-file: send a binary file. --file must be set
     * create-room: create a new room
     * modify-room: change an existing room (add an alias, set name, topic, join_rules, invite)

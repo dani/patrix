@@ -30,6 +30,7 @@ GetOptions(
   "action=s"                           => \$opt->{action},
   "send-msg|send-message"              => \$opt->{'send-msg'},
   "send-notice"                        => \$opt->{'send-notice'},
+  "send-code"                          => \$opt->{'send-code'},
   "send-file"                          => \$opt->{'send-file'},
   "create-room"                        => \$opt->{'create-room'},
   "modify-room"                        => \$opt->{'modify-room'},
@@ -62,6 +63,7 @@ if ($opt->{conf} && -e $opt->{conf}){
 my @actions = qw(
   send-msg
   send-notice
+  send-code
   send-file
   create-room
   modify-room
@@ -228,6 +230,11 @@ sub send_msg {
     msgtype => ($opt->{action} eq 'send-notice') ? 'm.notice' : 'm.text',
     body => $opt->{message}
   };
+  # If we send code, we have to format it correctly
+  if ($opt->{action} eq 'send-code'){
+    $json->{formatted_body} = '<pre><code>' . $opt->{message} . '</code></pre>';
+    $json->{format} = 'org.matrix.custom.html';
+  }
   my $resp = send_request({
     uri     => $uri,
     content => to_json($json)
@@ -549,7 +556,7 @@ elsif ($opt->{action} eq 'get-room-list'){
 elsif ($opt->{action} eq 'get-room-id'){
   print $opt->{room} . "\n";
 }
-elsif ($opt->{action} =~ m/^send\-(msg|message|notice)$/){
+elsif ($opt->{action} =~ m/^send\-(msg|message|notice|code)$/){
   join_room();
   send_msg();
 }
