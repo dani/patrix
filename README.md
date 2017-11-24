@@ -86,7 +86,7 @@ patrix --modify-room --join-rules=public --topic='New topic' --room='!uXfknaWNcA
 ```
   * Change power level needed for the ban action. Set the default power levels of new users to 10. Set power level for @dani:matrix.example.com to 90
 ```
-patrix -modify-room --perm "ban=70" --perm "users_default=10" --user-perm "@dani:matrix.example.com=90"
+patrix --modify-room --perm "ban=70" --perm "users_default=10" --user-perm "@dani:matrix.example.com=90"
 ```
   * Set the required power level to send the m.room.name event to 80 (you can change the room name if you have a power level of at least 80)
 ```
