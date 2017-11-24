@@ -1,5 +1,5 @@
 Name: patrix
-Version: 0.1.7
+Version: 0.1.8
 Release: 1%{?dist}
 Summary: Command line client for Matrix
 
@@ -52,6 +52,10 @@ room via the command line.
 %{_bindir}/patrix
 
 %changelog
+* Fri Nov 24 2017 Daniel Berteaud <daniel@firewall-services.com> 0.1.8-1
+- Typo in README (daniel@firewall-services.com)
+- Add support for --send-code (daniel@firewall-services.com)
+
 * Thu Nov 23 2017 Daniel Berteaud <daniel@firewall-services.com> 0.1.7-1
 - Fix get-room-id, Room ID is already resolved at this point (daniel@firewall-
   services.com)
