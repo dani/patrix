@@ -23,6 +23,7 @@ GetOptions(
   "password=s"                         => \$opt->{password},
   "access_token|access-token|token=s"  => \$opt->{access_token},
   "server=s"                           => \$opt->{server},
+  "proxy=s"                            => \$opt->{proxy},
   "room=s"                             => \$opt->{room},
   "message|msg=s"                      => \$opt->{message},
   "files=s@"                           => \$opt->{file},
@@ -81,6 +82,14 @@ foreach my $action (@actions){
 }
 
 my $lwp = LWP::UserAgent->new;
+
+# If a proxy is specified then use it. Else, try to get global one
+if ($opt->{proxy}){
+  $lwp->proxy(['https'], $opt->{proxy});
+}
+else{
+  $lwp->env_proxy;
+}
 
 my $stdin = 0;
 if (!-t STDIN){

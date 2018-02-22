@@ -21,6 +21,7 @@ Here're the vailable options:
   * --user: specify the user you want to login as
   * --password: the password to auth against the HS
   * --server: the HS you want to connect to. Default is https://matrix.org
+  * --proxy: use an HTTP proxy to access the HS. If not specified, will try to get system wide proxy (see LWP::UserAgent->env_proxy)
   * --access-token: can be used instead of --user and --password. Use --get-access-token to get one first for example.
   * --room: the room to which the message must be sent. Can be a room ID or a room alias
   * --message: the text message you want to send. If you send something on stdin, it's assumed to be the text to send and this option is ignored
