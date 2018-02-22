@@ -1,5 +1,5 @@
 Name: patrix
-Version: 0.1.8
+Version: 0.1.9
 Release: 1%{?dist}
 Summary: Command line client for Matrix
 
@@ -52,6 +52,9 @@ room via the command line.
 %{_bindir}/patrix
 
 %changelog
+* Thu Feb 22 2018 Daniel Berteaud <daniel@firewall-services.com> 0.1.9-1
+- Support using an HTTP proxy (daniel@firewall-services.com)
+
 * Fri Nov 24 2017 Daniel Berteaud <daniel@firewall-services.com> 0.1.8-1
 - Typo in README (daniel@firewall-services.com)
 - Add support for --send-code (daniel@firewall-services.com)
