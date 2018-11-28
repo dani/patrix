@@ -1,5 +1,5 @@
 Name: patrix
-Version: 0.1.9
+Version: 0.1.10
 Release: 1%{?dist}
 Summary: Command line client for Matrix
 
@@ -53,6 +53,11 @@ room via the command line.
 %{_bindir}/patrix
 
 %changelog
+* Wed Nov 28 2018 Daniel Berteaud <daniel@firewall-services.com> 0.1.10-1
+- Require LWP::Protocol::connect for EL distro (daniel@firewall-services.com)
+- USe LWP::Protocol::connect to handle https proxy if available
+  (daniel@firewall-services.com)
+
 * Thu Feb 22 2018 Daniel Berteaud <daniel@firewall-services.com> 0.1.9-1
 - Support using an HTTP proxy (daniel@firewall-services.com)
 
