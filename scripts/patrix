@@ -83,12 +83,15 @@ foreach my $action (@actions){
 
 my $lwp = LWP::UserAgent->new;
 
+if (not $opt->{proxy} and defined $ENV{https_proxy}){
+  $opt->{proxy} = $ENV{https_proxy};
+}
 # If a proxy is specified then use it. Else, try to get global one
 if ($opt->{proxy}){
+  if (eval { require LWP::Protocol::connect; }){
+    $opt->{proxy} =~ s|^http://(.*)|connect://$1|;
+  }
   $lwp->proxy(['https'], $opt->{proxy});
-}
-else{
-  $lwp->env_proxy;
 }
 
 my $stdin = 0;
