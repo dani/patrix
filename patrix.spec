@@ -23,6 +23,7 @@ Requires: perl(URI::Escape)
 Requires: perl(Term::ReadKey)
 Requires: perl(Hash::Merge::Simple)
 Requires: perl(Scalar::Util)
+Requires: perl(LWP::Protocol::connect)
 
 %description
 Patrix is a simple (and quite limited) client for the Matrix communication network
