@@ -1,5 +1,5 @@
 Name: patrix
-Version: 0.1.11
+Version: 0.1.12
 Release: 1%{?dist}
 Summary: Command line client for Matrix
 
@@ -52,6 +52,9 @@ room via the command line.
 %{_bindir}/patrix
 
 %changelog
+* Thu Dec 09 2021 Daniel Berteaud <dani@lapiole.org> 0.1.12-1
+- Revert requiring LWP::Protocol::connect (dani@lapiole.org)
+
 * Wed Dec 08 2021 Daniel Berteaud <dani@lapiole.org> 0.1.11-1
 - Rebuild with new key
 
