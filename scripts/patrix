@@ -52,12 +52,28 @@ GetOptions(
   "perm_reset|reset-permission"        => \$opt->{perm_reset}
 );
 
-if (-e File::HomeDir->my_home . "/.patrixrc" && !$opt->{conf}){
-  $opt->{conf} = File::HomeDir->my_home . "/.patrixrc";
-  debug("Using default config file $opt->{conf}");
+if (!$opt->{conf}){
+  # Read global config if it exists and is readable
+  if (-f '/etc/patrixrc' && open(CONFIG, '<', '/etc/patrixrc')){
+    $opt->{conf} = '/etc/patrixrc';
+    close CONFIG;
+    debug("Using global config file $opt->{conf}");
+  }
+
+  # If there's a user defined config, use it instead
+  if (-f File::HomeDir->my_home . "/.patrixrc" && open(CONFIG, '<', File::HomeDir->my_home . "/.patrixrc")){
+    $opt->{conf} = File::HomeDir->my_home . "/.patrixrc";
+    close CONFIG;
+    debug("Using default config file $opt->{conf}");
+  }
 }
+
 if ($opt->{conf} && -e $opt->{conf}){
   read_conf();
+}
+else {
+  die "No configuration found.\nYou should either create one in ~/.patrixrc " .
+      "or give the path of a custom config with --config /path/to/patrixrc";
 }
 
 # alias for --action=foo is --foo
