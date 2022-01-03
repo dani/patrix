@@ -1,5 +1,5 @@
 Name: patrix
-Version: 0.1.12
+Version: 0.1.13
 Release: 1%{?dist}
 Summary: Command line client for Matrix
 
@@ -52,6 +52,9 @@ room via the command line.
 %{_bindir}/patrix
 
 %changelog
+* Mon Jan 03 2022 Daniel Berteaud <dbd@ehtrace.com> 0.1.13-1
+- Check config readability and global /etc/patrixrc (dbd@ehtrace.com)
+
 * Thu Dec 09 2021 Daniel Berteaud <dani@lapiole.org> 0.1.12-1
 - Revert requiring LWP::Protocol::connect (dani@lapiole.org)
 
