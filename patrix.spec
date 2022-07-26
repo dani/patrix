@@ -1,5 +1,5 @@
 Name: patrix
-Version: 0.1.14
+Version: 0.1.15
 Release: 1%{?dist}
 Summary: Command line client for Matrix
 
@@ -52,6 +52,9 @@ room via the command line.
 %{_bindir}/patrix
 
 %changelog
+* Tue Jul 26 2022 Daniel Berteaud <dbd@ehtrace.com> 0.1.15-1
+- Resign with new key
+
 * Tue Jan 11 2022 Daniel Berteaud <dbd@ehtrace.com> 0.1.14-1
 - Release bump for rebuild
 
