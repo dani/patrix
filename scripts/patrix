@@ -15,8 +15,10 @@ use URI::Escape;
 use Term::ReadKey;
 use Hash::Merge::Simple qw(merge);
 use Scalar::Util qw(looks_like_number);
+use HTML::Strip;
 
 our $opt;
+our $hs = HTML::Strip->new();
 
 GetOptions(
   "user=s"                             => \$opt->{user},
@@ -256,8 +258,12 @@ sub send_msg {
   }
   my $json = {
     msgtype => ($opt->{action} eq 'send-notice') ? 'm.notice' : 'm.text',
-    body => $opt->{message}
+    body => $hs->parse($opt->{message}),
+    formatted_body => $opt->{message},
+    format => "org.matrix.custom.html",
   };
+  $hs->eof();
+  
   # If we send code, we have to format it correctly
   if ($opt->{action} eq 'send-code'){
     $json->{formatted_body} = '<pre><code>' . $opt->{message} . '</code></pre>';
