@@ -1,5 +1,5 @@
 Name: patrix
-Version: 0.1.15
+Version: 0.1.16
 Release: 1%{?dist}
 Summary: Command line client for Matrix
 
@@ -53,6 +53,10 @@ room via the command line.
 %{_bindir}/patrix
 
 %changelog
+* Mon Feb 13 2023 Daniel Berteaud <dbd@ehtrace.com> 0.1.16-1
+- Add HTML::Strip to Required (dbd@ehtrace.com)
+- Add HTML::Strip and always support HTML messages (imagotrigger@gmail.com)
+
 * Tue Jul 26 2022 Daniel Berteaud <dbd@ehtrace.com> 0.1.15-1
 - Resign with new key
 
