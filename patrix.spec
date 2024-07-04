@@ -1,5 +1,5 @@
 Name: patrix
-Version: 0.1.16
+Version: 0.1.17
 Release: 1%{?dist}
 Summary: Command line client for Matrix
 
@@ -53,6 +53,10 @@ room via the command line.
 %{_bindir}/patrix
 
 %changelog
+* Thu Jul 04 2024 Daniel Berteaud <dbd@ehtrace.com> 0.1.17-1
+- Use Authorization header instead of GET param to pass access_token
+  (dbd@ehtrace.com)
+
 * Mon Feb 13 2023 Daniel Berteaud <dbd@ehtrace.com> 0.1.16-1
 - Add HTML::Strip to Required (dbd@ehtrace.com)
 - Add HTML::Strip and always support HTML messages (imagotrigger@gmail.com)
